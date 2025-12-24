@@ -1,8 +1,10 @@
 import { Schema, model, Document, Types } from 'mongoose'
 
+import { ProductCategory } from '../constants/product'
+
 interface IProduct extends Document {
   name: string
-  category: 'keo' | 'gôm' | 'wax' | 'dầu gội' | 'khác'
+  category: ProductCategory
   price: number
   stock: number
   description?: string
@@ -20,7 +22,17 @@ interface IProduct extends Document {
 const productSchema = new Schema<IProduct>(
   {
     name: { type: String, required: [true, 'Tên sản phẩm là bắt buộc'] },
-    category: { type: String, enum: ['keo', 'gôm', 'wax', 'dầu gội', 'khác'], default: 'khác' },
+    category: {
+      type: String,
+      enum: [
+        ProductCategory.Keo,
+        ProductCategory.Gom,
+        ProductCategory.Wax,
+        ProductCategory.DauGoi,
+        ProductCategory.Khac
+      ],
+      default: ProductCategory.Khac
+    },
     price: { type: Number, required: [true, 'Giá là bắt buộc'], min: [0, 'Giá phải >= 0'] },
     stock: { type: Number, default: 0, min: [0, 'Kho phải >= 0'] },
     description: String,

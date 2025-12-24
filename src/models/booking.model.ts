@@ -1,5 +1,5 @@
 import { Schema, model, Document, Types } from 'mongoose'
-import Service from './service.model'
+import Service from './serviceItem.model'
 
 interface IBooking extends Document {
   user: Types.ObjectId

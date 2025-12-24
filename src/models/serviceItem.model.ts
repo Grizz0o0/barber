@@ -16,7 +16,7 @@ interface IService extends Document {
   updatedAt?: Date
 }
 
-const serviceSchema = new Schema<IService>(
+const ServiceItemSchema = new Schema<IService>(
   {
     name: { type: String, required: [true, 'Tên dịch vụ là bắt buộc'] },
     price: { type: Number, required: [true, 'Giá là bắt buộc'], min: [0, 'Giá phải >= 0'] },
@@ -33,6 +33,6 @@ const serviceSchema = new Schema<IService>(
   { timestamps: true }
 )
 
-serviceSchema.index({ name: 1 })
+ServiceItemSchema.index({ name: 1 })
 
-export default model<IService>('Service', serviceSchema)
+export default model<IService>('ServiceItem', ServiceItemSchema)
