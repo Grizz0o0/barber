@@ -1,0 +1,3 @@
+src/model/order.model.ts(67,31): error TS2339: Property 'stock' does not exist on type 'unknown'.
+src/model/order.model.ts(70,15): error TS2339: Property 'stock' does not exist on type 'unknown'.
+src/model/order.model.ts(71,21): error TS2339: Property 'save' does not exist on type 'unknown'.
