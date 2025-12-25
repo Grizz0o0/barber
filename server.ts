@@ -1,9 +1,16 @@
 import app from './src/app'
-import { Server } from 'http'
+import { createServer } from 'http'
 import { logger } from './src/utils/logger.utils'
+import SocketService from './src/services/socket.services'
+
 const PORT = process.env.APP_PORT || 3000
 
-const server: Server = app.listen(PORT, () => {
+const httpServer = createServer(app)
+
+// Init Socket.io
+SocketService.getInstance().init(httpServer)
+
+const server = httpServer.listen(PORT, () => {
   logger.info(`Server running at http://localhost:${PORT}/`)
 })
 

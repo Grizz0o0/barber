@@ -5,11 +5,13 @@ import authRouter from './auth.routes'
 import usersRouter from './user.routes'
 import productRouter from './product.routes'
 import serviceItemRouter from './serviceItem.routes'
+import barberScheduleRouter from './barberSchedule.routes'
 const router = Router()
 
 router.use('/medias', mediasRouter)
 router.use('/products', productRouter)
 router.use('/services', serviceItemRouter)
+router.use('/barber-schedules', barberScheduleRouter)
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
 
