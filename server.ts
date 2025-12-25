@@ -3,7 +3,7 @@ import { createServer } from 'http'
 import { logger } from './src/utils/logger.utils'
 import SocketService from './src/services/socket.services'
 
-const PORT = process.env.APP_PORT || 3000
+const PORT = process.env.APP_PORT || 3052
 
 const httpServer = createServer(app)
 

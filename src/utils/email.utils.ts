@@ -51,7 +51,7 @@ const createSendEmailCommand = ({
 // Hàm tổng quát để gửi email
 export const sendEmail = (toAddress: string, subject: string, body: string) => {
   const sendEmailCommand = createSendEmailCommand({
-    fromAddress: process.env.SES_FROM_ADDRESS as string,
+    fromAddress: envConfig.SES_FROM_ADDRESS as string,
     toAddresses: toAddress,
     body,
     subject
@@ -63,11 +63,11 @@ export const sendEmail = (toAddress: string, subject: string, body: string) => {
 // Hàm gửi email xác thực đăng ký tài khoản
 export const sendVerifyEmailRegister = (toAddress: string, token: string) => {
   const subject = 'Xác thực email đăng nhập'
-  const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${token}&email=${encodeURIComponent(toAddress)}`
+  const verificationLink = `${envConfig.CLIENT_URL}/verify-email?token=${token}&email=${encodeURIComponent(toAddress)}`
   const body = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
       <div style="text-align: center;">
-        <h2 style="color: #333333;">Fly24h✈️</h2>
+        <h2 style="color: #333333;">Dang Barber💇</h2>
       </div>
       <h3 style="color: #333333;">Xin chào!</h3>
       <p style="color: #555555; line-height: 1.6;">
@@ -88,7 +88,7 @@ export const sendVerifyEmailRegister = (toAddress: string, token: string) => {
         </a>
       </p>
       <p style="color: #999999; font-size: 12px;">
-        Trân trọng,<br/>Fly24h✈️
+        Trân trọng,<br/>Dang Barber💇‍♂️
       </p>
     </div>
   `
@@ -99,11 +99,11 @@ export const sendVerifyEmailRegister = (toAddress: string, token: string) => {
 // Hàm gửi email đặt lại mật khẩu
 export const sendForgotPasswordEmail = (toAddress: string, token: string) => {
   const subject = 'Đặt lại mật khẩu tài khoản của bạn'
-  const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?token=${token}&email=${encodeURIComponent(toAddress)}`
+  const resetPasswordLink = `${envConfig.CLIENT_URL}/reset-password?token=${token}&email=${encodeURIComponent(toAddress)}`
   const body = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
       <div style="text-align: center;">
-        <h2 style="color: #333333;">Fly24h✈️</h2>
+        <h2 style="color: #333333;">Dang Barber💇</h2>
       </div>
       <h3 style="color: #333333;">Xin chào!</h3>
       <p style="color: #555555; line-height: 1.6;">
@@ -124,10 +124,25 @@ export const sendForgotPasswordEmail = (toAddress: string, token: string) => {
         </a>
       </p>
       <p style="color: #999999; font-size: 12px;">
-        Trân trọng,<br/>Fly24h✈️
+        Trân trọng,<br/>Dang Barber💇‍♂️
       </p>
     </div>
   `
 
+  return sendEmail(toAddress, subject, body)
+}
+
+export const sendBookingSuccessEmail = (toAddress: string, bookingDetails: any) => {
+  const subject = 'Xác nhận đặt lịch thành công'
+  // Simplified email body for scheduling
+  const body = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+       <h2>Đặt lịch thành công!</h2>
+       <p>Xin chào,</p>
+       <p>Bạn đã đặt lịch cắt tóc thành công.</p>
+       <p><b>Thời gian:</b> ${new Date(bookingDetails.startTime).toLocaleString('vi-VN')}</p>
+       <p>Vui lòng đến đúng giờ.</p>
+    </div>
+  `
   return sendEmail(toAddress, subject, body)
 }

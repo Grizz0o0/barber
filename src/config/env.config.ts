@@ -13,6 +13,7 @@ if (!fs.existsSync(path.resolve('.env'))) {
 const configSchema = z.object({
   // App Configuration
   APP_PORT: z.string(),
+  CLIENT_URL: z.string(),
   HOST: z.string(),
   NODE_ENV: z.enum(['dev', 'pro']).default('dev'),
 
@@ -44,6 +45,7 @@ const configSchema = z.object({
   MOMO_PORT: z.string(),
   MOMO_PATH: z.string(),
   MOMO_STORE_ID: z.string(),
+  MOMO_PARTNER_CODE: z.string(),
   MOMO_PARTNER_NAME: z.string(),
   MOMO_LANG: z.string(),
   MOMO_ORDER_INFO: z.string(),

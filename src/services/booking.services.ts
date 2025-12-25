@@ -1,0 +1,229 @@
+import BookingModel from '~/models/booking.model'
+import ServiceModel from '~/models/serviceItem.model'
+import BarberScheduleModel from '~/models/barberSchedule.model'
+import { NotFoundError, BadRequestError } from '~/responses/error.response'
+import { createPagination } from '~/responses/success.response'
+import { CreateBookingReqBody, UpdateBookingReqBody, GetBookingQuery } from '~/requestSchemas/booking.request'
+import SocketService from '~/services/socket.services'
+import { ObjectId } from 'mongodb'
+import UserModel from '~/models/user.model'
+import { UserRole } from '~/constants/user'
+import { sendBookingSuccessEmail } from '~/utils/email.utils'
+class BookingService {
+  static createBooking = async (userId: string | ObjectId, payload: CreateBookingReqBody) => {
+    const { barber, service, startTime, notes } = payload
+    const startDateTime = new Date(startTime)
+
+    // 1. Check User and Barber existence
+    const user = await UserModel.findOne({ _id: userId, isDeleted: false, isActive: true })
+    if (!user) throw new NotFoundError('User not found or inactive')
+
+    const barberUser = await UserModel.findOne({ _id: barber, isDeleted: false, isActive: true })
+    if (!barberUser) throw new NotFoundError('Barber user not found')
+
+    if (barberUser.role !== UserRole.Barber) {
+      throw new BadRequestError('Selected user is not a barber')
+    }
+
+    // 2. Check Service existence and get duration
+    const foundService = await ServiceModel.findOne({ _id: service, isDeleted: false })
+    if (!foundService) throw new NotFoundError('Service not found')
+
+    // 2. Calculate endTime based on service duration
+    const endDateTime = new Date(startDateTime.getTime() + foundService.duration * 60000)
+
+    // 3. Check Barber Schedule
+    await BookingService.validateBarberSchedule(new ObjectId(barber), startDateTime, endDateTime)
+
+    // 4. Check overlaps
+    const overlappingBooking = await BookingModel.findOne({
+      barber,
+      status: { $ne: 'cancelled' },
+      isDeleted: false,
+      $or: [{ startTime: { $lt: endDateTime }, endTime: { $gt: startDateTime } }]
+    })
+
+    if (overlappingBooking) {
+      throw new BadRequestError('Barber is busy at this time')
+    }
+
+    const newBooking = await BookingModel.create({
+      user: userId,
+      barber,
+      service,
+      startTime: startDateTime,
+      endTime: endDateTime,
+      notes,
+      status: 'pending',
+      paymentStatus: 'unpaid'
+    })
+
+    if (!newBooking) throw new BadRequestError('Error create booking')
+
+    // Emit socket event
+    SocketService.getInstance().emit('booking:created', newBooking)
+
+    // Send Email (Async, don't block)
+    sendBookingSuccessEmail(user.email, newBooking).catch(console.error)
+
+    return newBooking
+  }
+
+  static getAllBookings = async ({
+    limit = 10,
+    page = 1,
+    order = 'desc',
+    sortBy = 'createdAt',
+    barber,
+    user,
+    status,
+    from,
+    to
+  }: GetBookingQuery) => {
+    const skip = ((page || 1) - 1) * (limit || 10)
+    const sortOrder = order === 'asc' ? 1 : -1
+    const sortCondition: { [key: string]: 1 | -1 } = { [sortBy || 'createdAt']: sortOrder }
+
+    const filter: any = { isDeleted: false }
+
+    if (barber) filter.barber = barber
+    if (user) filter.user = user
+    if (status) filter.status = status
+
+    if (from || to) {
+      filter.startTime = {}
+      if (from) filter.startTime.$gte = new Date(from)
+      if (to) filter.startTime.$lte = new Date(to)
+    }
+
+    const totalItems = await BookingModel.countDocuments(filter)
+
+    const bookings = await BookingModel.find(filter)
+      .populate('user', 'name email phone avatar')
+      .populate('barber', 'name email phone avatar') // Assuming barber is a User
+      .populate('service', 'name price duration')
+      .sort(sortCondition)
+      .skip(skip)
+      .limit(limit || 10)
+      .lean()
+
+    const pagination = createPagination(page || 1, limit || 10, totalItems)
+
+    return { bookings, pagination }
+  }
+
+  static getBookingById = async (bookingId: string) => {
+    const foundBooking = await BookingModel.findOne({ _id: bookingId, isDeleted: false })
+      .populate('user', 'name email phone avatar')
+      .populate('barber', 'name email phone avatar')
+      .populate('service', 'name price duration')
+
+    if (!foundBooking) throw new NotFoundError('Booking not found')
+    return foundBooking
+  }
+
+  static updateBooking = async (bookingId: string, payload: UpdateBookingReqBody) => {
+    const foundBooking = await BookingModel.findOne({ _id: bookingId, isDeleted: false })
+    if (!foundBooking) throw new NotFoundError('Booking not found')
+
+    // If rescheduling (changing time/service/barber), we need to re-validate overlaps
+    if (payload.startTime || payload.service || payload.barber) {
+      // Logic to recalculate times and check overlaps...
+      // For simplicity in this CRUD step, let's allow updating direct fields first.
+      // But if startTime changes, we must recalc endTime if service is constant, or look up service duration.
+      // This complexity suggests we might block rescheduling here or handle it carefully.
+      // Let's implement basic status updates first. If conflict checks are needed for update, add them.
+
+      if (payload.startTime || payload.service) {
+        // Recalc endTime
+        const startDateTime = payload.startTime ? new Date(payload.startTime) : foundBooking.startTime
+        const serviceId = payload.service || foundBooking.service
+
+        const service = await ServiceModel.findById(serviceId)
+        if (!service) throw new BadRequestError('Service not found')
+
+        // Recalc end time
+        const endDateTime = new Date(startDateTime.getTime() + service.duration * 60000)
+
+        // Validate Schedule
+        const barberId = payload.barber || foundBooking.barber
+        await BookingService.validateBarberSchedule(new ObjectId(barberId), startDateTime, endDateTime)
+
+        // Check overlap (exclude current booking)
+
+        const overlapping = await BookingModel.findOne({
+          _id: { $ne: bookingId },
+          barber: barberId,
+          status: { $ne: 'cancelled' },
+          isDeleted: false,
+          $or: [{ startTime: { $lt: endDateTime }, endTime: { $gt: startDateTime } }]
+        })
+
+        if (overlapping) throw new BadRequestError('Barber is busy at this time')
+
+        // Update payload
+        // @ts-ignore
+        payload.endTime = endDateTime
+      }
+    }
+
+    const updatedBooking = await BookingModel.findByIdAndUpdate(bookingId, payload, { new: true })
+    if (!updatedBooking) throw new BadRequestError('Update booking failed')
+
+    // Emit socket event
+    SocketService.getInstance().emit('booking:updated', updatedBooking)
+
+    return updatedBooking
+  }
+
+  static deleteBooking = async (bookingId: string) => {
+    const foundBooking = await BookingModel.findOne({ _id: bookingId, isDeleted: false })
+    if (!foundBooking) throw new NotFoundError('Booking not found')
+
+    // Soft delete
+    const deletedBooking = await BookingModel.findByIdAndUpdate(
+      bookingId,
+      { isDeleted: true, deletedAt: new Date() },
+      { new: true }
+    )
+
+    if (!deletedBooking) throw new BadRequestError('Delete booking failed')
+
+    // Emit socket event
+    SocketService.getInstance().emit('booking:deleted', deletedBooking)
+
+    return deletedBooking
+  }
+
+  static validateBarberSchedule = async (barberId: ObjectId, startDateTime: Date, endDateTime: Date) => {
+    const dayOfWeek = startDateTime.getDay()
+    const barberSchedule = await BarberScheduleModel.findOne({
+      barber: barberId,
+      dayOfWeek,
+      isDeleted: false
+    })
+
+    if (!barberSchedule) {
+      throw new BadRequestError('Barber does not work on this day')
+    }
+
+    if (barberSchedule.isDayOff) {
+      throw new BadRequestError('Barber is off on this day')
+    }
+
+    const [startHour, startMinute] = barberSchedule.startTime.split(':').map(Number)
+    const [endHour, endMinute] = barberSchedule.endTime.split(':').map(Number)
+
+    const scheduleStart = new Date(startDateTime)
+    scheduleStart.setHours(startHour, startMinute, 0, 0)
+
+    const scheduleEnd = new Date(startDateTime)
+    scheduleEnd.setHours(endHour, endMinute, 0, 0)
+
+    if (startDateTime < scheduleStart || endDateTime > scheduleEnd) {
+      throw new BadRequestError('Booking time is outside of barber working hours')
+    }
+  }
+}
+
+export default BookingService

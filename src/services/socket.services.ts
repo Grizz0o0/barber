@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io'
 import { Server as HttpServer } from 'http'
 import { logger } from '~/utils/logger.utils'
+import envConfig from '~/config/env.config'
 
 class SocketService {
   private static instance: SocketService
@@ -18,7 +19,7 @@ class SocketService {
   public init(httpServer: HttpServer): void {
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: 'http://localhost:3000', // Match with Express cors config
+        origin: envConfig.CLIENT_URL, // Match with Express cors config
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         credentials: true
       }
