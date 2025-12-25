@@ -7,6 +7,7 @@ import productRouter from './product.routes'
 import serviceItemRouter from './serviceItem.routes'
 import barberScheduleRouter from './barberSchedule.routes'
 import bookingRouter from './booking.routes'
+import cartRouter from './cart.routes'
 const router = Router()
 
 router.use('/medias', mediasRouter)
@@ -14,6 +15,7 @@ router.use('/products', productRouter)
 router.use('/services', serviceItemRouter)
 router.use('/barber-schedules', barberScheduleRouter)
 router.use('/bookings', bookingRouter)
+router.use('/cart', cartRouter)
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
 
