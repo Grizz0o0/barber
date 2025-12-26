@@ -119,12 +119,25 @@ class ReviewService {
   static calcProductRating = async (productId: string) => {
     const stats = await ReviewModel.aggregate([
       { $match: { product: new ObjectId(productId), isDeleted: false } },
-      { $group: { _id: '$product', avgRating: { $avg: '$rating' }, count: { $sum: 1 } } }
+      {
+        $group: {
+          _id: '$product',
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          avgRating: { $round: ['$avgRating', 1] }, // Round to 1 decimal place using DB engine
+          count: 1
+        }
+      }
     ])
 
     if (stats.length > 0) {
       await ProductModel.findByIdAndUpdate(productId, {
-        rating: Math.round(stats[0].avgRating * 10) / 10,
+        rating: stats[0].avgRating,
         ratingCount: stats[0].count
       })
     } else {
@@ -135,13 +148,26 @@ class ReviewService {
   static calcBarberRating = async (barberId: string) => {
     const stats = await ReviewModel.aggregate([
       { $match: { barber: new ObjectId(barberId), isDeleted: false } },
-      { $group: { _id: '$barber', avgRating: { $avg: '$rating' }, count: { $sum: 1 } } }
+      {
+        $group: {
+          _id: '$barber',
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          avgRating: { $round: ['$avgRating', 1] }, // Round to 1 decimal place
+          count: 1
+        }
+      }
     ])
 
     if (stats.length > 0) {
       // Assuming 'User' Model has rating fields (optional)
       await UserModel.findByIdAndUpdate(barberId, {
-        rating: Math.round(stats[0].avgRating * 10) / 10,
+        rating: stats[0].avgRating,
         ratingCount: stats[0].count
       }).catch((err) => logger.error('[ReviewService.calcBarberRating] Failed to update user rating:', err))
     } else {

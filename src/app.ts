@@ -22,6 +22,8 @@ app.use(helmet())
 app.use(compression())
 app.use(express.json({ limit: '10kb' })) // Body limit as requested
 app.use(express.urlencoded({ extended: true, limit: '10kb' }))
+import mongoSanitize from 'express-mongo-sanitize'
+app.use(mongoSanitize())
 app.use(apiLimiter)
 
 app.use(
