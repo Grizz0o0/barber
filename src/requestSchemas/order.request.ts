@@ -16,6 +16,7 @@ export const createOrderSchema = {
       city: z.string({ error: 'Thành phố là bắt buộc' }).trim().min(1),
       country: z.string().default('Vietnam')
     }),
+    paymentMethod: z.enum(['Cash', 'MoMo', 'Banking']).default('Cash'),
     promotion: z.string().optional()
   })
 }
@@ -27,7 +28,7 @@ export const updateOrderSchema = {
     id: z.string().trim().min(1, 'Id không được để trống')
   }),
   body: z.object({
-    status: z.enum(['processing', 'shipped', 'delivered', 'cancelled']).optional(),
+    status: z.enum(['pending_payment', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
     shippingAddress: z
       .object({
         street: z.string().trim().min(1).optional(),
@@ -56,7 +57,7 @@ export const getOrderSchema = {
     page: z.coerce.number().int().positive().optional(),
     order: z.enum(['asc', 'desc']).optional(),
     sortBy: z.enum(['createdAt', 'totalPrice', 'status']).optional(),
-    status: z.enum(['processing', 'shipped', 'delivered', 'cancelled']).optional(),
+    status: z.enum(['pending_payment', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
     user: z.string().optional()
   })
 }

@@ -11,7 +11,10 @@ interface IOrder extends Document {
   user: Types.ObjectId
   items: IOrderItem[]
   totalPrice: number
-  status: 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  discountAmount: number
+  status: 'pending_payment' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  paymentMethod: 'Cash' | 'MoMo' | 'Banking'
+  paymentStatus: 'unpaid' | 'paid' | 'refunded'
   shippingAddress: {
     street: string
     district?: string
@@ -38,7 +41,14 @@ const orderSchema = new Schema<IOrder>(
       }
     ],
     totalPrice: { type: Number, required: true, min: 0 },
-    status: { type: String, enum: ['processing', 'shipped', 'delivered', 'cancelled'], default: 'processing' },
+    discountAmount: { type: Number, default: 0 },
+    status: {
+      type: String,
+      enum: ['pending_payment', 'processing', 'shipped', 'delivered', 'cancelled'],
+      default: 'processing'
+    },
+    paymentMethod: { type: String, enum: ['Cash', 'MoMo', 'Banking'], default: 'Cash' },
+    paymentStatus: { type: String, enum: ['unpaid', 'paid', 'refunded'], default: 'unpaid' },
     shippingAddress: {
       street: { type: String, required: true },
       district: String,

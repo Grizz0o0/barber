@@ -9,9 +9,11 @@ import { ObjectId } from 'mongodb'
 import UserModel from '~/models/user.model'
 import { UserRole } from '~/constants/user'
 import { sendBookingSuccessEmail } from '~/utils/email.utils'
+import PromotionService from '~/services/promotion.services'
+
 class BookingService {
   static createBooking = async (userId: string | ObjectId, payload: CreateBookingReqBody) => {
-    const { barber, service, startTime, notes } = payload
+    const { barber, service, startTime, notes, promotion } = payload
     const startDateTime = new Date(startTime)
 
     // 1. Check User and Barber existence
@@ -25,7 +27,7 @@ class BookingService {
       throw new BadRequestError('Selected user is not a barber')
     }
 
-    // 2. Check Service existence and get duration
+    // 2. Check Service existence and get duration/price
     const foundService = await ServiceModel.findOne({ _id: service, isDeleted: false })
     if (!foundService) throw new NotFoundError('Service not found')
 
@@ -47,6 +49,21 @@ class BookingService {
       throw new BadRequestError('Barber is busy at this time')
     }
 
+    // 4.5 Apply Promotion
+    let finalPrice = foundService.price
+    let discountAmount = 0
+    let promotionId: string | ObjectId | undefined
+
+    if (promotion) {
+      const checkPromo = await PromotionService.verifyPromotion(promotion, foundService.price, 'service')
+      if (!checkPromo.isValid) {
+        throw new BadRequestError(checkPromo.message || 'Promotion invalid')
+      }
+      discountAmount = checkPromo.discountAmount
+      finalPrice = foundService.price - discountAmount
+      promotionId = checkPromo.promotionId
+    }
+
     const newBooking = await BookingModel.create({
       user: userId,
       barber,
@@ -54,11 +71,19 @@ class BookingService {
       startTime: startDateTime,
       endTime: endDateTime,
       notes,
+      promotion: promotionId,
+      discountAmount,
+      totalPrice: finalPrice,
       status: 'pending',
       paymentStatus: 'unpaid'
     })
 
     if (!newBooking) throw new BadRequestError('Error create booking')
+
+    // 4.6 Increment Promotion Usage
+    if (promotionId) {
+      PromotionService.incrementUsage(promotionId).catch(console.error)
+    }
 
     // Emit socket event
     SocketService.getInstance().emit('booking:created', newBooking)

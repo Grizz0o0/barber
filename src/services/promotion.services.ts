@@ -9,6 +9,7 @@ interface VerifyPromotionResult {
   isValid: boolean
   discountAmount: number
   message?: string
+  promotionId?: string | ObjectId
 }
 
 class PromotionService {
@@ -105,7 +106,11 @@ class PromotionService {
     return deletedPromotion
   }
 
-  static verifyPromotion = async (codeOrId: string, orderTotal: number): Promise<VerifyPromotionResult> => {
+  static verifyPromotion = async (
+    codeOrId: string,
+    orderTotal: number,
+    context: 'product' | 'service' | 'all' = 'all'
+  ): Promise<VerifyPromotionResult> => {
     // Determine if input is code or ID
     const filter = ObjectId.isValid(codeOrId) ? { _id: codeOrId } : { code: codeOrId }
 
@@ -123,6 +128,15 @@ class PromotionService {
       return { isValid: false, discountAmount: 0, message: 'Mã khuyến mãi đã hết lượt sử dụng' }
     }
 
+    // Check applicableTo
+    if (promotion.applicableTo !== 'all' && context !== 'all' && promotion.applicableTo !== context) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: `Mã khuyến mãi này chỉ áp dụng cho ${promotion.applicableTo === 'product' ? 'đơn hàng sản phẩm' : 'dịch vụ'}`
+      }
+    }
+
     if (orderTotal < promotion.minOrderValue) {
       return {
         isValid: false,
@@ -133,14 +147,23 @@ class PromotionService {
 
     // Calculate discount
     let discountAmount = 0
-    if (promotion.discountPercent) {
+
+    if (promotion.discountValue) {
+      // Prioritize fixed amount
+      discountAmount = promotion.discountValue
+    } else if (promotion.discountPercent) {
+      // Percentage calculation
       discountAmount = (orderTotal * promotion.discountPercent) / 100
+      // Apply max discount cap if exists
+      if (promotion.maxDiscountValue && discountAmount > promotion.maxDiscountValue) {
+        discountAmount = promotion.maxDiscountValue
+      }
     }
 
     // Ensure discount doesn't exceed total
     if (discountAmount > orderTotal) discountAmount = orderTotal
 
-    return { isValid: true, discountAmount }
+    return { isValid: true, discountAmount, promotionId: promotion._id }
   }
 
   static incrementUsage = async (promotionId: string | ObjectId) => {

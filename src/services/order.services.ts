@@ -60,19 +60,27 @@ class OrderService {
         totalPrice += product.price * item.quantity
       }
 
-      // 1.5. Apply Promotion (If exists)
+      // 4.5 Apply Promotion (If exists)
       let finalPrice = totalPrice
       let discountAmount = 0
+      let promotionId: string | ObjectId | undefined
 
       if (promotion) {
         // Validate promotion
-        const checkPromo = await PromotionService.verifyPromotion(promotion.toString(), totalPrice)
+        const checkPromo = await PromotionService.verifyPromotion(promotion.toString(), totalPrice, 'product')
         if (!checkPromo.isValid) {
           // Restore stock before throwing
           throw new BadRequestError(checkPromo.message || 'Promotion invalid')
         }
         discountAmount = checkPromo.discountAmount
         finalPrice = totalPrice - discountAmount
+        promotionId = checkPromo.promotionId
+      }
+
+      // Determine initial status
+      let initialStatus = 'processing'
+      if (payload.paymentMethod === 'MoMo' || payload.paymentMethod === 'Banking') {
+        initialStatus = 'pending_payment'
       }
 
       // 2. Create Order
@@ -80,9 +88,12 @@ class OrderService {
         user: userId,
         items: orderItems,
         totalPrice: finalPrice,
+        discountAmount,
         shippingAddress,
-        promotion,
-        status: 'processing'
+        promotion: promotionId,
+        status: initialStatus,
+        paymentMethod: payload.paymentMethod,
+        paymentStatus: 'unpaid'
       })
 
       if (!newOrder) {
@@ -102,8 +113,8 @@ class OrderService {
       sendOrderSuccessEmail(user.email, newOrder).catch(console.error)
 
       // 5. Increment Promotion Usage (Async, non-blocking but should be handled)
-      if (promotion) {
-        PromotionService.incrementUsage(promotion).catch(console.error)
+      if (promotionId) {
+        PromotionService.incrementUsage(promotionId).catch(console.error)
       }
 
       return newOrder

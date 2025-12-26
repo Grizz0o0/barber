@@ -7,7 +7,8 @@ export const createBookingSchema = {
     startTime: z
       .string({ error: 'Thời gian bắt đầu là bắt buộc' })
       .datetime({ message: 'Thời gian bắt đầu phải là định dạng ISO 8601 hợp lệ' }),
-    notes: z.string().optional()
+    notes: z.string().optional(),
+    promotion: z.string().optional()
   })
 }
 

@@ -3,6 +3,8 @@ import { Schema, model, Document, Types } from 'mongoose'
 interface IPromotion extends Document {
   code: string
   discountPercent?: number
+  discountValue?: number // Giảm giá theo số tiền cố định (e.g. 50k)
+  maxDiscountValue?: number // Giảm tối đa (cho trường hợp %)
   minOrderValue: number
   expiryDate: Date
   maxUsage?: number
@@ -22,6 +24,8 @@ const promotionSchema = new Schema<IPromotion>(
   {
     code: { type: String, unique: true, required: [true, 'Mã khuyến mãi là bắt buộc'] },
     discountPercent: { type: Number, min: [0, 'Giảm giá >=0'], max: [100, 'Giảm giá <=100'] },
+    discountValue: { type: Number, min: [0, 'Số tiền giảm >= 0'] },
+    maxDiscountValue: { type: Number, min: [0, 'Giảm tối đa >= 0'] },
     minOrderValue: { type: Number, default: 0, min: 0 },
     expiryDate: { type: Date, required: [true, 'Ngày hết hạn là bắt buộc'] },
     maxUsage: { type: Number, min: 0 },

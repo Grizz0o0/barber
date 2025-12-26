@@ -5,6 +5,8 @@ export const createPromotionSchema = {
     .object({
       code: z.string({ error: 'Mã khuyến mãi là bắt buộc' }).trim().min(3, 'Mã phải có ít nhất 3 ký tự').toUpperCase(),
       discountPercent: z.number().min(0).max(100).optional(),
+      discountValue: z.number().min(0).optional(),
+      maxDiscountValue: z.number().min(0).optional(),
       minOrderValue: z.number().min(0).optional().default(0),
       expiryDate: z.string({ error: 'Ngày hết hạn là bắt buộc' }).datetime(),
       maxUsage: z.number().int().min(1).optional(),
@@ -27,6 +29,8 @@ export const updatePromotionSchema = {
     .object({
       code: z.string().trim().min(3).toUpperCase().optional(),
       discountPercent: z.number().min(0).max(100).optional(),
+      discountValue: z.number().min(0).optional(),
+      maxDiscountValue: z.number().min(0).optional(),
       minOrderValue: z.number().min(0).optional(),
       expiryDate: z.string().datetime().optional(),
       maxUsage: z.number().int().min(1).optional(),

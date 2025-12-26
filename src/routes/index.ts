@@ -10,6 +10,7 @@ import bookingRouter from './booking.routes'
 import cartRouter from './cart.routes'
 import orderRouter from './order.routes'
 import promotionRouter from './promotion.routes'
+import paymentRouter from './payment.routes'
 const router = Router()
 
 router.use('/medias', mediasRouter)
@@ -20,6 +21,7 @@ router.use('/bookings', bookingRouter)
 router.use('/cart', cartRouter)
 router.use('/orders', orderRouter)
 router.use('/promotions', promotionRouter)
+router.use('/payments', paymentRouter)
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
 

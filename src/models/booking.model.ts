@@ -10,6 +10,9 @@ interface IBooking extends Document {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
   paymentStatus: 'unpaid' | 'paid' | 'refunded'
   notes?: string
+  promotion?: Types.ObjectId
+  discountAmount: number
+  totalPrice: number
   isDeleted: boolean
   deletedAt?: Date
   createdBy?: Types.ObjectId
@@ -29,6 +32,9 @@ const bookingSchema = new Schema<IBooking>(
     status: { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
     paymentStatus: { type: String, enum: ['unpaid', 'paid', 'refunded'], default: 'unpaid' },
     notes: String,
+    promotion: { type: Schema.Types.ObjectId, ref: 'Promotion' },
+    discountAmount: { type: Number, default: 0 },
+    totalPrice: { type: Number, required: true },
     isDeleted: { type: Boolean, default: false },
     deletedAt: Date,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
