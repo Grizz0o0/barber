@@ -17,6 +17,8 @@ interface IUser extends Document {
   verify: UserVerifyStatus
   avatar?: string
   isActive: boolean
+  rating?: number
+  ratingCount?: number
   forgotPasswordToken?: string
   forgotPasswordExpire?: Date
   resetPasswordToken?: string
@@ -61,6 +63,8 @@ const userSchema = new Schema<IUser>(
     },
     avatar: String,
     isActive: { type: Boolean, default: true },
+    rating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
     forgotPasswordToken: String,
     forgotPasswordExpire: Date,
     resetPasswordToken: String,

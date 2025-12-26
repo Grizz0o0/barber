@@ -4,8 +4,11 @@ interface IReview extends Document {
   user: Types.ObjectId
   product?: Types.ObjectId
   booking?: Types.ObjectId
+  barber?: Types.ObjectId
   rating: number
   comment?: string
+  images: string[]
+  reply?: string
   isDeleted: boolean
   deletedAt?: Date
   createdBy?: Types.ObjectId
@@ -20,8 +23,11 @@ const reviewSchema = new Schema<IReview>(
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     product: { type: Schema.Types.ObjectId, ref: 'Product' },
     booking: { type: Schema.Types.ObjectId, ref: 'Booking' },
+    barber: { type: Schema.Types.ObjectId, ref: 'User' }, // Denormalized for performance
     rating: { type: Number, min: [1, 'Rating từ 1-5'], max: [5, 'Rating từ 1-5'], required: true },
     comment: String,
+    images: [{ type: String }],
+    reply: { type: String, trim: true },
     isDeleted: { type: Boolean, default: false },
     deletedAt: Date,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -34,9 +40,6 @@ const reviewSchema = new Schema<IReview>(
 reviewSchema.index({ user: 1, product: 1 }, { unique: true, sparse: true })
 reviewSchema.index({ user: 1, booking: 1 }, { unique: true, sparse: true })
 
-// Gợi ý hook post-save để update avg rating (thêm field avgRating ở Product/Service nếu cần)
-reviewSchema.post('save', async function (doc) {
-  // Logic tính avg rating cho product hoặc booking (sử dụng aggregation)
-})
+// Hook post-save can be used, but we calculate explicitly in Service for better control.
 
 export default model<IReview>('Review', reviewSchema)

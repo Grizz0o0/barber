@@ -10,6 +10,8 @@ interface IProduct extends Document {
   description?: string
   images?: string[]
   isActive: boolean
+  rating: number
+  ratingCount: number
   isDeleted: boolean
   deletedAt?: Date
   createdBy?: Types.ObjectId
@@ -38,6 +40,8 @@ const productSchema = new Schema<IProduct>(
     description: String,
     images: [String],
     isActive: { type: Boolean, default: true },
+    rating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
     isDeleted: { type: Boolean, default: false },
     deletedAt: Date,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
