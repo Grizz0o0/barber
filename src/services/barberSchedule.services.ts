@@ -7,9 +7,14 @@ import {
   GetBarberScheduleQuery
 } from '~/requestSchemas/barberSchedule.request'
 import SocketService from '~/services/socket.services'
+import { UserRole } from '~/constants/user'
+import { ObjectId } from 'mongodb'
 
 class BarberScheduleService {
-  static createSchedule = async (payload: CreateBarberScheduleReqBody) => {
+  static createSchedule = async (userId: string | ObjectId, role: string, payload: CreateBarberScheduleReqBody) => {
+    if (role === UserRole.Barber) {
+      payload.barber = userId.toString()
+    }
     const { barber, dayOfWeek, startTime, endTime } = payload
 
     // Validation: Start time < End time
@@ -78,9 +83,18 @@ class BarberScheduleService {
     return foundSchedule
   }
 
-  static updateSchedule = async (scheduleId: string, payload: UpdateBarberScheduleReqBody) => {
+  static updateSchedule = async (
+    userId: string | ObjectId,
+    role: string,
+    scheduleId: string,
+    payload: UpdateBarberScheduleReqBody
+  ) => {
     const foundSchedule = await BarberScheduleModel.findOne({ _id: scheduleId, isDeleted: false })
     if (!foundSchedule) throw new NotFoundError('Schedule not found')
+
+    if (role === UserRole.Barber && foundSchedule.barber.toString() !== userId.toString()) {
+      throw new BadRequestError('Bạn không có quyền sửa lịch của barber khác')
+    }
 
     if (payload.startTime && payload.endTime && payload.startTime >= payload.endTime) {
       throw new BadRequestError('Giờ kết thúc phải sau giờ bắt đầu')
@@ -103,9 +117,13 @@ class BarberScheduleService {
     return updatedSchedule
   }
 
-  static deleteSchedule = async (scheduleId: string) => {
+  static deleteSchedule = async (userId: string | ObjectId, role: string, scheduleId: string) => {
     const foundSchedule = await BarberScheduleModel.findOne({ _id: scheduleId, isDeleted: false })
     if (!foundSchedule) throw new NotFoundError('Schedule not found')
+
+    if (role === UserRole.Barber && foundSchedule.barber.toString() !== userId.toString()) {
+      throw new BadRequestError('Bạn không có quyền xóa lịch của barber khác')
+    }
 
     // Soft delete
     const deletedSchedule = await BarberScheduleModel.findByIdAndUpdate(

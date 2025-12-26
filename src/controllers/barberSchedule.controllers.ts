@@ -4,9 +4,11 @@ import { SuccessResponse, Created } from '~/responses/success.response'
 
 class BarberScheduleController {
   static createSchedule = async (req: Request, res: Response) => {
+    const { userId } = req.keyStore!
+    const { role } = req.user!
     new Created({
       message: 'Create schedule success',
-      metadata: await BarberScheduleService.createSchedule(req.body)
+      metadata: await BarberScheduleService.createSchedule(userId, role, req.body)
     }).send(res)
   }
 
@@ -25,16 +27,20 @@ class BarberScheduleController {
   }
 
   static updateSchedule = async (req: Request, res: Response) => {
+    const { userId } = req.keyStore!
+    const { role } = req.user!
     new SuccessResponse({
       message: 'Update schedule success',
-      metadata: await BarberScheduleService.updateSchedule(req.params.id, req.body)
+      metadata: await BarberScheduleService.updateSchedule(userId, role, req.params.id, req.body)
     }).send(res)
   }
 
   static deleteSchedule = async (req: Request, res: Response) => {
+    const { userId } = req.keyStore!
+    const { role } = req.user!
     new SuccessResponse({
       message: 'Delete schedule success',
-      metadata: await BarberScheduleService.deleteSchedule(req.params.id)
+      metadata: await BarberScheduleService.deleteSchedule(userId, role, req.params.id)
     }).send(res)
   }
 }
