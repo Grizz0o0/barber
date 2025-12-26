@@ -149,14 +149,16 @@ class ReviewService {
       }
     }
 
-    const totalItems = await ReviewModel.countDocuments(filter)
-    const reviews = await ReviewModel.find(filter)
-      .populate('user', 'name avatar')
-      .populate('product', 'name image') // Optional
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit || 10)
-      .lean()
+    const [totalItems, reviews] = await Promise.all([
+      ReviewModel.countDocuments(filter),
+      ReviewModel.find(filter)
+        .populate('user', 'name avatar')
+        .populate('product', 'name image') // Optional
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit || 10)
+        .lean()
+    ])
 
     return {
       reviews,

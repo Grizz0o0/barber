@@ -39,13 +39,14 @@ class ProductService {
       filter.$text = { $search: search }
     }
 
-    const totalItems = await ProductModel.countDocuments(filter)
-
-    const products = await ProductModel.find(filter)
-      .sort(sortCondition)
-      .skip(skip)
-      .limit(limit || 10)
-      .lean()
+    const [totalItems, products] = await Promise.all([
+      ProductModel.countDocuments(filter),
+      ProductModel.find(filter)
+        .sort(sortCondition)
+        .skip(skip)
+        .limit(limit || 10)
+        .lean()
+    ])
 
     const pagination = createPagination(page || 1, limit || 10, totalItems)
 
