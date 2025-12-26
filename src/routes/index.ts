@@ -8,6 +8,8 @@ import serviceItemRouter from './serviceItem.routes'
 import barberScheduleRouter from './barberSchedule.routes'
 import bookingRouter from './booking.routes'
 import cartRouter from './cart.routes'
+import orderRouter from './order.routes'
+import promotionRouter from './promotion.routes'
 const router = Router()
 
 router.use('/medias', mediasRouter)
@@ -16,6 +18,8 @@ router.use('/services', serviceItemRouter)
 router.use('/barber-schedules', barberScheduleRouter)
 router.use('/bookings', bookingRouter)
 router.use('/cart', cartRouter)
+router.use('/orders', orderRouter)
+router.use('/promotions', promotionRouter)
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
 

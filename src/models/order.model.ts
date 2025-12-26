@@ -1,5 +1,4 @@
 import mongoose, { Schema, model, Document, Types } from 'mongoose'
-import Product from './product.model'
 
 interface IOrderItem {
   product: Types.ObjectId
@@ -59,29 +58,6 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ user: 1 })
 orderSchema.index({ status: 1 })
 
-// Hook pre-save: Giảm stock
-orderSchema.pre('save', async function () {
-  // 1. Xử lý trừ kho khi tạo đơn mới
-  if (this.isNew) {
-    for (const item of this.items) {
-      const product = await Product.findById(item.product)
-      if (!product || product.stock < item.quantity) {
-        throw new Error(`Sản phẩm ${item.nameAtPurchase} không đủ hàng`)
-      }
-      product.stock -= item.quantity
-      await product.save()
-    }
-  }
-
-  // 2. Xử lý hoàn kho khi HỦY ĐƠN (Nếu trạng thái chuyển sang cancelled)
-  if (this.isModified('status') && this.status === 'cancelled') {
-    // Chỉ hoàn kho nếu đơn hàng trước đó chưa bị hủy
-    // (Logic này nên check kỹ hơn ở Controller để tránh cộng dồn nhiều lần)
-    for (const item of this.items) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: item.quantity }
-      })
-    }
-  }
-})
+// Hook pre-save: Removed Stock Logic to Service
+// Stock management should be handled in Service for Transaction support and better error handling.
 export default model<IOrder>('Order', orderSchema)

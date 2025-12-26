@@ -38,8 +38,8 @@ const promotionSchema = new Schema<IPromotion>(
 )
 
 promotionSchema.pre('save', async function () {
-  if (this.expiryDate <= (this as any).createdAt) {
-    throw new Error('Ngày hết hạn phải sau ngày tạo')
+  if (this.isNew && this.expiryDate <= new Date()) {
+    throw new Error('Ngày hết hạn phải sau ngày hiện tại')
   }
 })
 

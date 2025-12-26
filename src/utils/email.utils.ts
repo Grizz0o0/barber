@@ -146,3 +146,17 @@ export const sendBookingSuccessEmail = (toAddress: string, bookingDetails: any) 
   `
   return sendEmail(toAddress, subject, body)
 }
+
+export const sendOrderSuccessEmail = (toAddress: string, orderDetails: any) => {
+  const subject = 'Xác nhận đơn hàng thành công'
+  const body = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+       <h2>Đặt hàng thành công!</h2>
+       <p>Xin chào,</p>
+       <p>Đơn hàng <b>#${orderDetails._id}</b> của bạn đã được đặt thành công.</p>
+       <p><b>Tổng tiền:</b> ${orderDetails.totalPrice.toLocaleString('vi-VN')} VND</p>
+       <p>Chúng tôi sẽ sớm giao hàng cho bạn.</p>
+    </div>
+  `
+  return sendEmail(toAddress, subject, body)
+}
