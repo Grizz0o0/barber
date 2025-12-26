@@ -17,10 +17,13 @@ import {
 } from '~/requestSchemas/auth.request'
 import { asyncHandler } from '~/helpers/asyncHandler'
 
+import { authLimiter } from '~/middlewares/rateLimit.middleware'
+
 const authRouter = Router()
 
-authRouter.post('/register', validateRequest(registerSchema), asyncHandler(AuthController.register))
-authRouter.post('/login', validateRequest(loginSchema), asyncHandler(AuthController.login))
+authRouter.post('/register', authLimiter, validateRequest(registerSchema), asyncHandler(AuthController.register))
+authRouter.post('/login', authLimiter, validateRequest(loginSchema), asyncHandler(AuthController.login))
+
 authRouter.post(
   '/logout',
   validateRequest({ headers: authenticationV2Schema }),
