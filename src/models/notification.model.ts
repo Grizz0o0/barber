@@ -17,6 +17,8 @@ export interface INotification extends Document {
   referenceId?: Types.ObjectId // Có thể là BookingId, OrderId, ReviewId...
   isRead: boolean
   isDeleted: boolean
+  deletedAt?: Date
+  deletedBy?: Types.ObjectId
   createdAt: Date
   updatedAt: Date
 }
@@ -33,7 +35,9 @@ const notificationSchema = new Schema<INotification>(
     },
     referenceId: { type: Schema.Types.ObjectId },
     isRead: { type: Boolean, default: false },
-    isDeleted: { type: Boolean, default: false }
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: Date,
+    deletedBy: { type: Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
 )

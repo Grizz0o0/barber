@@ -104,6 +104,8 @@ class NotificationService {
     if (!notification) throw new NotFoundError('Notification not found')
 
     notification.isDeleted = true
+    notification.deletedAt = new Date()
+    notification.deletedBy = new ObjectId(userId)
     await notification.save()
 
     return { message: 'Deleted successfully' }
