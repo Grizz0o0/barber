@@ -85,7 +85,15 @@ class ReviewService {
       return newReview
     } catch (error: any) {
       if (error.code === 11000) {
-        throw new BadRequestError('Bạn đã đánh giá dịch vụ/sản phẩm này rồi')
+        // Handle unique compound indexes: (user + booking) or (user + product)
+        if (error.keyPattern?.booking) {
+          throw new BadRequestError('Bạn đã đánh giá dịch vụ này rồi')
+        }
+        if (error.keyPattern?.product) {
+          throw new BadRequestError('Bạn đã đánh giá sản phẩm này rồi')
+        }
+        // Fallback generic message
+        throw new BadRequestError('Bạn đã thực hiện đánh giá này rồi')
       }
       throw error
     }
