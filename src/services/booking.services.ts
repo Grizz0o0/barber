@@ -10,6 +10,8 @@ import UserModel from '~/models/user.model'
 import { UserRole } from '~/constants/user'
 import { sendBookingSuccessEmail } from '~/utils/email.utils'
 import PromotionService from '~/services/promotion.services'
+import NotificationService from '~/services/notification.services'
+import { NotificationType } from '~/models/notification.model'
 
 class BookingService {
   static createBooking = async (userId: string | ObjectId, payload: CreateBookingReqBody) => {
@@ -87,6 +89,15 @@ class BookingService {
 
     // Emit socket event
     SocketService.getInstance().emit('booking:created', newBooking)
+
+    // Push Notification to Barber
+    NotificationService.pushNotification({
+      userId: barber,
+      title: 'Lịch hẹn mới',
+      message: `Khách hàng đã đặt lịch hẹn lúc ${newBooking.startTime.toLocaleString()}`,
+      type: NotificationType.Booking,
+      referenceId: newBooking._id
+    }).catch(console.error)
 
     // Send Email (Async, don't block)
     sendBookingSuccessEmail(user.email, newBooking).catch(console.error)
@@ -197,6 +208,24 @@ class BookingService {
 
     // Emit socket event
     SocketService.getInstance().emit('booking:updated', updatedBooking)
+
+    // Notify User if status changed to confirmed/cancelled/completed
+    if (payload.status && payload.status !== foundBooking.status) {
+      let message = ''
+      if (payload.status === 'confirmed') message = 'Lịch hẹn của bạn đã được xác nhận'
+      if (payload.status === 'cancelled') message = 'Lịch hẹn của bạn đã bị hủy'
+      if (payload.status === 'completed') message = 'Cảm ơn bạn đã sử dụng dịch vụ'
+
+      if (message) {
+        NotificationService.pushNotification({
+          userId: updatedBooking.user,
+          title: 'Cập nhật lịch hẹn',
+          message,
+          type: NotificationType.Booking,
+          referenceId: updatedBooking._id
+        }).catch(console.error)
+      }
+    }
 
     return updatedBooking
   }

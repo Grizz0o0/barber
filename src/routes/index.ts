@@ -12,6 +12,7 @@ import orderRouter from './order.routes'
 import promotionRouter from './promotion.routes'
 import paymentRouter from './payment.routes'
 import reviewRouter from './review.routes'
+import notificationRouter from './notification.routes'
 const router = Router()
 
 router.use('/medias', mediasRouter)
@@ -24,6 +25,7 @@ router.use('/orders', orderRouter)
 router.use('/promotions', promotionRouter)
 router.use('/payments', paymentRouter)
 router.use('/reviews', reviewRouter)
+router.use('/notifications', notificationRouter)
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
 

@@ -11,6 +11,8 @@ import { createPagination } from '~/responses/success.response'
 import SocketService from '~/services/socket.services'
 import { MomoPaymentConfirmResponse, MomoPaymentInitResponse } from '~/types/payments.types'
 import { buildRawSignature, generateSignature } from '~/utils/payment.utils'
+import NotificationService from '~/services/notification.services'
+import { NotificationType } from '~/models/notification.model'
 
 class PaymentService {
   static async paymentMoMo(userId: string | ObjectId, payload: PaymentMoMoReqBody) {
@@ -137,7 +139,6 @@ class PaymentService {
         const order = await OrderModel.findById(updatedPayment.order)
         if (order) {
           // If order was pending_payment, now it becomes processing
-          // If it was already processing (e.g. COD but paid online later? unlikely), keep it.
           const nextStatus = order.status === 'pending_payment' ? 'processing' : order.status
 
           await OrderModel.findByIdAndUpdate(updatedPayment.order, {
@@ -152,6 +153,27 @@ class PaymentService {
             paymentStatus: 'paid'
           })
         }
+      }
+
+      // Push Notification
+      if (updatedPayment.createdBy) {
+        NotificationService.pushNotification({
+          userId: updatedPayment.createdBy,
+          title: 'Thanh toán thành công',
+          message: `Thanh toán cho ${updatedPayment.paymentFor} thành công. Mã GD: ${updatedPayment.transactionId}`,
+          type: NotificationType.Payment,
+          referenceId: updatedPayment._id
+        }).catch(console.error)
+      }
+    } else if (newStatus === PaymentStatus.FAILED) {
+      if (updatedPayment.createdBy) {
+        NotificationService.pushNotification({
+          userId: updatedPayment.createdBy,
+          title: 'Thanh toán thất bại',
+          message: `Giao dịch ${updatedPayment.transactionId} thất bại. Vui lòng thử lại.`,
+          type: NotificationType.Payment,
+          referenceId: updatedPayment._id
+        }).catch(console.error)
       }
     }
 

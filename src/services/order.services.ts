@@ -9,6 +9,8 @@ import SocketService from '~/services/socket.services'
 import PromotionService from '~/services/promotion.services'
 import { ObjectId } from 'mongodb'
 import { sendOrderSuccessEmail } from '~/utils/email.utils'
+import NotificationService from '~/services/notification.services'
+import { NotificationType } from '~/models/notification.model'
 
 class OrderService {
   static createOrder = async (userId: string | ObjectId, payload: CreateOrderReqBody) => {
@@ -234,6 +236,24 @@ class OrderService {
 
     // Emit socket event
     SocketService.getInstance().emit('order:updated', updatedOrder)
+
+    // Notify User
+    if (status && status !== foundOrder.status) {
+      let message = ''
+      if (status === 'shipped') message = 'Đơn hàng đang được vận chuyển'
+      if (status === 'delivered') message = 'Đơn hàng đã được giao thành công'
+      if (status === 'cancelled') message = 'Đơn hàng đã bị hủy'
+
+      if (message) {
+        NotificationService.pushNotification({
+          userId: updatedOrder.user,
+          title: 'Trạng thái đơn hàng',
+          message,
+          type: NotificationType.Order,
+          referenceId: updatedOrder._id
+        }).catch(console.error)
+      }
+    }
 
     return updatedOrder
   }

@@ -13,6 +13,8 @@ import {
 import { ObjectId } from 'mongodb'
 import { UserRole } from '~/constants/user'
 import UserModel from '~/models/user.model'
+import NotificationService from '~/services/notification.services'
+import { NotificationType } from '~/models/notification.model'
 
 class ReviewService {
   static createReview = async (userId: string | ObjectId, payload: CreateReviewReqBody) => {
@@ -190,7 +192,14 @@ class ReviewService {
     review.reply = payload.reply
     await review.save()
 
-    // TODO: Notify user about reply via Socket/Email
+    // Notify user about reply
+    NotificationService.pushNotification({
+      userId: review.user,
+      title: 'Phản hồi đánh giá',
+      message: 'Admin/Cửa hàng đã phản hồi đánh giá của bạn',
+      type: NotificationType.Review,
+      referenceId: review._id
+    }).catch(console.error)
 
     return review
   }
