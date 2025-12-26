@@ -59,7 +59,16 @@ class ReviewService {
     // 2. Create Review
     let newReview
     try {
-      const reviewData: any = {
+      // Basic image validation (check if they are URLs)
+      if (images && images.length > 0) {
+        const urlRegex = /^(http|https):\/\/[^ "]+$/
+        const invalidImages = images.filter((img) => !urlRegex.test(img))
+        if (invalidImages.length > 0) {
+          throw new BadRequestError('Hình ảnh không hợp lệ (phải là URL)')
+        }
+      }
+
+      const reviewData: Partial<any> = {
         user: userId,
         ...payload
       }

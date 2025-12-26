@@ -53,5 +53,7 @@ const productSchema = new Schema<IProduct>(
 
 productSchema.index({ name: 'text' })
 productSchema.index({ category: 1 })
+productSchema.index({ createdAt: -1 }) // Sort by newest
+productSchema.index({ category: 1, createdAt: -1 }) // Compound sort
 
 export default model<IProduct>('Product', productSchema)

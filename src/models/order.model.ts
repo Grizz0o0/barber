@@ -67,6 +67,9 @@ const orderSchema = new Schema<IOrder>(
 
 orderSchema.index({ user: 1 })
 orderSchema.index({ status: 1 })
+orderSchema.index({ createdAt: -1 })
+orderSchema.index({ user: 1, createdAt: -1 })
+orderSchema.index({ status: 1, createdAt: -1 })
 
 // Hook pre-save: Removed Stock Logic to Service
 // Stock management should be handled in Service for Transaction support and better error handling.

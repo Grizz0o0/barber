@@ -47,6 +47,9 @@ const bookingSchema = new Schema<IBooking>(
 bookingSchema.index({ barber: 1, startTime: 1 })
 bookingSchema.index({ user: 1 })
 bookingSchema.index({ status: 1 })
+bookingSchema.index({ createdAt: -1 })
+bookingSchema.index({ user: 1, createdAt: -1 })
+bookingSchema.index({ status: 1, createdAt: -1 })
 
 // Hook pre-save: Tính endTime từ duration của Service và validate
 bookingSchema.pre('save', async function () {
