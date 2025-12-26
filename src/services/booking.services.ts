@@ -280,17 +280,22 @@ class BookingService {
       throw new BadRequestError('Barber is off on this day')
     }
 
+    // Standardize to UTC: We assume BarberSchedule start/end times are stored in UTC (HH:MM)
+    // and the incoming startDateTime is a proper ISO 8601 Date object.
     const [startHour, startMinute] = barberSchedule.startTime.split(':').map(Number)
     const [endHour, endMinute] = barberSchedule.endTime.split(':').map(Number)
 
     const scheduleStart = new Date(startDateTime)
-    scheduleStart.setHours(startHour, startMinute, 0, 0)
+    scheduleStart.setUTCHours(startHour, startMinute, 0, 0)
 
     const scheduleEnd = new Date(startDateTime)
-    scheduleEnd.setHours(endHour, endMinute, 0, 0)
+    scheduleEnd.setUTCHours(endHour, endMinute, 0, 0)
+
+    // Note: If scheduleEnd is meant to be the next day (e.g. 23:00 to 02:00), logic needs generic day-crossing handling.
+    // Assuming strictly within-day schedules for Barber for now or stored as UTC covering the shift.
 
     if (startDateTime < scheduleStart || endDateTime > scheduleEnd) {
-      throw new BadRequestError('Booking time is outside of barber working hours')
+      throw new BadRequestError('Booking time is outside of barber working hours (UTC)')
     }
   }
 }
