@@ -9,6 +9,7 @@ import { Request, Response, NextFunction } from 'express'
 import router from '~/routes'
 import { ErrorResponse } from '~/responses/error.response'
 import { initFolder } from '~/utils/files.utils'
+import envConfig from '~/config/env.config'
 import { apiLimiter } from '~/middlewares/rateLimit.middleware'
 
 const app = express()
@@ -25,7 +26,7 @@ app.use(apiLimiter)
 
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: envConfig.CLIENT_URL,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'x-api-key', 'authorization', 'x-client-id', 'x-rtoken-id']
