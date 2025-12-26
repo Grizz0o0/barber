@@ -70,10 +70,15 @@ class ReviewService {
       newReview = await ReviewModel.create(reviewData)
 
       // 3. Update Aggregations (Async)
+      // 3. Update Aggregations (Async - Fire & Forget with Error Handling)
       if (product) {
-        ReviewService.calcProductRating(product)
+        ReviewService.calcProductRating(product).catch((err) =>
+          console.error(`[ReviewService.createReview] Failed to update product rating for ${product}:`, err)
+        )
       } else if (reviewData.barber) {
-        ReviewService.calcBarberRating(reviewData.barber.toString())
+        ReviewService.calcBarberRating(reviewData.barber.toString()).catch((err) =>
+          console.error(`[ReviewService.createReview] Failed to update barber rating for ${reviewData.barber}:`, err)
+        )
       }
 
       return newReview
@@ -157,9 +162,13 @@ class ReviewService {
     if (!updated) throw new NotFoundError('Review not found')
 
     if (updated.product) {
-      ReviewService.calcProductRating(updated.product.toString())
+      ReviewService.calcProductRating(updated.product.toString()).catch((err) =>
+        console.error(`[ReviewService.updateReview] Failed to update product rating for ${updated.product}:`, err)
+      )
     } else if (updated.barber) {
-      ReviewService.calcBarberRating(updated.barber.toString())
+      ReviewService.calcBarberRating(updated.barber.toString()).catch((err) =>
+        console.error(`[ReviewService.updateReview] Failed to update barber rating for ${updated.barber}:`, err)
+      )
     }
 
     return updated
@@ -176,9 +185,13 @@ class ReviewService {
     await ReviewModel.findByIdAndUpdate(reviewId, { isDeleted: true })
 
     if (review.product) {
-      ReviewService.calcProductRating(review.product.toString())
+      ReviewService.calcProductRating(review.product.toString()).catch((err) =>
+        console.error(`[ReviewService.deleteReview] Failed to update product rating for ${review.product}:`, err)
+      )
     } else if (review.barber) {
-      ReviewService.calcBarberRating(review.barber.toString())
+      ReviewService.calcBarberRating(review.barber.toString()).catch((err) =>
+        console.error(`[ReviewService.deleteReview] Failed to update barber rating for ${review.barber}:`, err)
+      )
     }
 
     return { message: 'Deleted successfully' }
