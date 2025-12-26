@@ -185,9 +185,20 @@ class ReviewService {
   }
 
   // Admin/Staff only
-  static replyReview = async (reviewId: string, payload: ReplyReviewReqBody) => {
+  static replyReview = async (
+    userId: string | ObjectId,
+    reviewId: string,
+    payload: ReplyReviewReqBody,
+    role: string
+  ) => {
     const review = await ReviewModel.findOne({ _id: reviewId, isDeleted: false })
     if (!review) throw new NotFoundError('Review not found')
+
+    if (role === UserRole.Barber) {
+      if (!review.barber || review.barber.toString() !== userId.toString()) {
+        throw new BadRequestError('Bạn chỉ được phép trả lời đánh giá của chính mình')
+      }
+    }
 
     review.reply = payload.reply
     await review.save()

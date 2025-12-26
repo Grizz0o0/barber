@@ -37,9 +37,11 @@ class ReviewController {
   }
 
   static replyReview = async (req: Request, res: Response) => {
+    const { userId } = req.keyStore!
+    const { role } = req.user!
     new SuccessResponse({
       message: 'Reply review success',
-      metadata: await ReviewService.replyReview(req.params.id, req.body)
+      metadata: await ReviewService.replyReview(userId, req.params.id, req.body, role)
     }).send(res)
   }
 }
