@@ -20,10 +20,13 @@ class ReviewService {
   static createReview = async (userId: string | ObjectId, payload: CreateReviewReqBody) => {
     const { product, booking, rating, comment, images } = payload
 
+    // Hoist variable
+    let foundBooking: any = null
+
     // 1. Validate Target
     if (booking) {
       // Check booking
-      const foundBooking = await BookingModel.findOne({ _id: booking, isDeleted: false })
+      foundBooking = await BookingModel.findOne({ _id: booking, isDeleted: false })
       if (!foundBooking) throw new NotFoundError('Booking not found')
 
       if (foundBooking.user.toString() !== userId.toString()) {
@@ -58,13 +61,8 @@ class ReviewService {
         ...payload
       }
 
-      if (booking) {
-        // We already foundBooking above but TS might complain if scope issue.
-        // Re-finding is redundant but let's assume valid.
-        const foundBooking = await BookingModel.findById(booking)
-        if (foundBooking) {
-          reviewData.barber = foundBooking.barber
-        }
+      if (foundBooking) {
+        reviewData.barber = foundBooking.barber
       }
 
       newReview = await ReviewModel.create(reviewData)
@@ -131,7 +129,13 @@ class ReviewService {
     if (product) filter.product = product
     if (booking) filter.booking = booking
     if (hasReply) {
-      filter.reply = hasReply === 'true' ? { $exists: true, $ne: '' } : { $in: [null, ''] }
+      if (hasReply === 'true') {
+        // Must exist and match regex for at least one non-whitespace char
+        filter.reply = { $exists: true, $regex: /\S/ }
+      } else {
+        // Does not exist OR is null OR is empty string OR is whitespace only
+        filter.$or = [{ reply: { $exists: false } }, { reply: null }, { reply: '' }, { reply: { $regex: /^\s*$/ } }]
+      }
     }
 
     const totalItems = await ReviewModel.countDocuments(filter)
@@ -217,7 +221,8 @@ class ReviewService {
       }
     }
 
-    review.reply = payload.reply
+    // Trim reply before saving to ensure clean data
+    review.reply = payload.reply ? payload.reply.trim() : payload.reply
     await review.save()
 
     // Notify user about reply
