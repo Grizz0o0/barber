@@ -35,8 +35,6 @@ const cartSchema = new Schema<ICart>(
   { timestamps: true }
 )
 
-cartSchema.index({ user: 1 })
-
 // Hook pre-save: Tính totalPrice tự động từ items (populate price từ Product)
 cartSchema.pre('save', async function () {
   if (this.isModified('items')) {

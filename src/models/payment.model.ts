@@ -38,6 +38,5 @@ const paymentSchema = new Schema<IPayment>(
 paymentSchema.index({ order: 1 })
 paymentSchema.index({ booking: 1 })
 paymentSchema.index({ status: 1 })
-paymentSchema.index({ transactionId: 1 })
 
 export default model<IPayment>('Payment', paymentSchema)

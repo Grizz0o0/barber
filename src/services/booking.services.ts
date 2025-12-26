@@ -1,7 +1,7 @@
 import BookingModel from '~/models/booking.model'
 import ServiceModel from '~/models/serviceItem.model'
 import BarberScheduleModel from '~/models/barberSchedule.model'
-import { NotFoundError, BadRequestError } from '~/responses/error.response'
+import { NotFoundError, BadRequestError, ForbiddenError } from '~/responses/error.response'
 import { createPagination } from '~/responses/success.response'
 import { CreateBookingReqBody, UpdateBookingReqBody, GetBookingQuery } from '~/requestSchemas/booking.request'
 import SocketService from '~/services/socket.services'
@@ -158,9 +158,19 @@ class BookingService {
     return foundBooking
   }
 
-  static updateBooking = async (bookingId: string, payload: UpdateBookingReqBody) => {
+  static updateBooking = async (
+    bookingId: string,
+    userId: string | ObjectId,
+    userRole: string,
+    payload: UpdateBookingReqBody
+  ) => {
     const foundBooking = await BookingModel.findOne({ _id: bookingId, isDeleted: false })
     if (!foundBooking) throw new NotFoundError('Booking not found')
+
+    // Check ownership
+    if (userRole === UserRole.Customer && foundBooking.user.toString() !== userId.toString()) {
+      throw new ForbiddenError('You can only update your own bookings')
+    }
 
     // If rescheduling (changing time/service/barber), we need to re-validate overlaps
     if (payload.startTime || payload.service || payload.barber) {
@@ -230,9 +240,14 @@ class BookingService {
     return updatedBooking
   }
 
-  static deleteBooking = async (bookingId: string) => {
+  static deleteBooking = async (bookingId: string, userId: string | ObjectId, userRole: string) => {
     const foundBooking = await BookingModel.findOne({ _id: bookingId, isDeleted: false })
     if (!foundBooking) throw new NotFoundError('Booking not found')
+
+    // Check ownership
+    if (userRole === UserRole.Customer && foundBooking.user.toString() !== userId.toString()) {
+      throw new ForbiddenError('You can only delete your own bookings')
+    }
 
     // Soft delete
     const deletedBooking = await BookingModel.findByIdAndUpdate(
