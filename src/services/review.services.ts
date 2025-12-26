@@ -41,11 +41,14 @@ class ReviewService {
       const orders = await OrderModel.find({
         user: userId,
         status: 'delivered',
-        'items.product': product
+        isDeleted: false,
+        items: {
+          $elemMatch: { product: product }
+        }
       })
 
-      // Strict Mode: Enforce purchase
-      if (orders.length === 0) {
+      // Strict Mode: Enforce purchase and delivery
+      if (!orders || orders.length === 0) {
         throw new BadRequestError('Bạn chưa mua sản phẩm này hoặc đơn hàng chưa giao thành công')
       }
 
