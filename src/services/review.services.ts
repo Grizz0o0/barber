@@ -15,6 +15,7 @@ import { UserRole } from '~/constants/user'
 import UserModel from '~/models/user.model'
 import NotificationService from '~/services/notification.services'
 import { NotificationType } from '~/models/notification.model'
+import logger from '~/utils/logger'
 
 class ReviewService {
   static createReview = async (userId: string | ObjectId, payload: CreateReviewReqBody) => {
@@ -90,11 +91,11 @@ class ReviewService {
       // 3. Update Aggregations (Async - Fire & Forget with Error Handling)
       if (product) {
         ReviewService.calcProductRating(product).catch((err) =>
-          console.error(`[ReviewService.createReview] Failed to update product rating for ${product}:`, err)
+          logger.error(`[ReviewService.createReview] Failed to update product rating for ${product}:`, err)
         )
       } else if (reviewData.barber) {
         ReviewService.calcBarberRating(reviewData.barber.toString()).catch((err) =>
-          console.error(`[ReviewService.createReview] Failed to update barber rating for ${reviewData.barber}:`, err)
+          logger.error(`[ReviewService.createReview] Failed to update barber rating for ${reviewData.barber}:`, err)
         )
       }
 
@@ -142,9 +143,11 @@ class ReviewService {
       await UserModel.findByIdAndUpdate(barberId, {
         rating: Math.round(stats[0].avgRating * 10) / 10,
         ratingCount: stats[0].count
-      }).catch(console.error)
+      }).catch((err) => logger.error('[ReviewService.calcBarberRating] Failed to update user rating:', err))
     } else {
-      await UserModel.findByIdAndUpdate(barberId, { rating: 0, ratingCount: 0 }).catch(console.error)
+      await UserModel.findByIdAndUpdate(barberId, { rating: 0, ratingCount: 0 }).catch((err) =>
+        logger.error('[ReviewService.calcBarberRating] Failed to update user rating reset:', err)
+      )
     }
   }
 
@@ -196,11 +199,11 @@ class ReviewService {
 
     if (updated.product) {
       ReviewService.calcProductRating(updated.product.toString()).catch((err) =>
-        console.error(`[ReviewService.updateReview] Failed to update product rating for ${updated.product}:`, err)
+        logger.error(`[ReviewService.updateReview] Failed to update product rating for ${updated.product}:`, err)
       )
     } else if (updated.barber) {
       ReviewService.calcBarberRating(updated.barber.toString()).catch((err) =>
-        console.error(`[ReviewService.updateReview] Failed to update barber rating for ${updated.barber}:`, err)
+        logger.error(`[ReviewService.updateReview] Failed to update barber rating for ${updated.barber}:`, err)
       )
     }
 
@@ -223,11 +226,11 @@ class ReviewService {
 
     if (review.product) {
       ReviewService.calcProductRating(review.product.toString()).catch((err) =>
-        console.error(`[ReviewService.deleteReview] Failed to update product rating for ${review.product}:`, err)
+        logger.error(`[ReviewService.deleteReview] Failed to update product rating for ${review.product}:`, err)
       )
     } else if (review.barber) {
       ReviewService.calcBarberRating(review.barber.toString()).catch((err) =>
-        console.error(`[ReviewService.deleteReview] Failed to update barber rating for ${review.barber}:`, err)
+        logger.error(`[ReviewService.deleteReview] Failed to update barber rating for ${review.barber}:`, err)
       )
     }
 
@@ -261,7 +264,7 @@ class ReviewService {
       message: 'Admin/Cửa hàng đã phản hồi đánh giá của bạn',
       type: NotificationType.Review,
       referenceId: review._id
-    }).catch(console.error)
+    }).catch((err) => logger.error('[ReviewService.replyReview] Failed to push notification:', err))
 
     return review
   }
