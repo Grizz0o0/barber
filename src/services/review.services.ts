@@ -61,6 +61,7 @@ class ReviewService {
     try {
       // Basic image validation (check if they are URLs)
       if (images && images.length > 0) {
+        // Simple regex for URL validation
         const urlRegex = /^(http|https):\/\/[^ "]+$/
         const invalidImages = images.filter((img) => !urlRegex.test(img))
         if (invalidImages.length > 0) {
@@ -68,7 +69,13 @@ class ReviewService {
         }
       }
 
-      const reviewData: Partial<any> = {
+      // Explicit type for reviewData
+      interface ReviewDataPayload extends CreateReviewReqBody {
+        user: string | ObjectId
+        barber?: string | ObjectId
+      }
+
+      const reviewData: ReviewDataPayload = {
         user: userId,
         ...payload
       }
