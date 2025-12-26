@@ -6,6 +6,7 @@ import {
   UpdateServiceItemReqBody,
   GetListServiceItemQuery
 } from '~/requestSchemas/serviceItem.request'
+import { ObjectId } from 'mongodb'
 
 class ServiceItemService {
   static createServiceItem = async (payload: CreateServiceItemReqBody) => {
@@ -65,14 +66,14 @@ class ServiceItemService {
     return updatedService
   }
 
-  static deleteServiceItem = async (serviceId: string) => {
+  static deleteServiceItem = async (serviceId: string, userId: string | ObjectId) => {
     const foundService = await ServiceItemModel.findOne({ _id: serviceId, isDeleted: false })
     if (!foundService) throw new NotFoundError('Service not found')
 
     // Soft delete
     const deletedService = await ServiceItemModel.findByIdAndUpdate(
       serviceId,
-      { isDeleted: true, deletedAt: new Date() },
+      { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
       { new: true }
     )
 

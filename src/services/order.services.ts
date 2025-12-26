@@ -258,14 +258,14 @@ class OrderService {
     return updatedOrder
   }
 
-  static deleteOrder = async (orderId: string) => {
+  static deleteOrder = async (orderId: string, userId: string | ObjectId) => {
     const foundOrder = await OrderModel.findOne({ _id: orderId, isDeleted: false })
     if (!foundOrder) throw new NotFoundError('Order not found')
 
     // Soft delete
     const deletedOrder = await OrderModel.findByIdAndUpdate(
       orderId,
-      { isDeleted: true, deletedAt: new Date() },
+      { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
       { new: true }
     )
 

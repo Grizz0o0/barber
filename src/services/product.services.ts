@@ -3,6 +3,7 @@ import { NotFoundError, BadRequestError } from '~/responses/error.response'
 import { getSelectData, getInfoData } from '~/utils/object.utils'
 import { createPagination } from '~/responses/success.response'
 import { CreateProductReqBody, UpdateProductReqBody, GetListProductQuery } from '~/requestSchemas/product.request'
+import { ObjectId } from 'mongodb'
 
 class ProductService {
   static createProduct = async (payload: CreateProductReqBody) => {
@@ -67,14 +68,14 @@ class ProductService {
     return updatedProduct
   }
 
-  static deleteProduct = async (productId: string) => {
+  static deleteProduct = async (productId: string, userId: string | ObjectId) => {
     const foundProduct = await ProductModel.findOne({ _id: productId, isDeleted: false })
     if (!foundProduct) throw new NotFoundError('Product not found')
 
     // Soft delete
     const deletedProduct = await ProductModel.findByIdAndUpdate(
       productId,
-      { isDeleted: true, deletedAt: new Date() },
+      { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
       { new: true }
     )
 

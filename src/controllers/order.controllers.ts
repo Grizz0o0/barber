@@ -35,7 +35,7 @@ class OrderController {
   static deleteOrder = async (req: Request, res: Response) => {
     new SuccessResponse({
       message: 'Delete order success',
-      metadata: await OrderService.deleteOrder(req.params.id)
+      metadata: await OrderService.deleteOrder(req.params.id, req.keyStore!.userId)
     }).send(res)
   }
 }

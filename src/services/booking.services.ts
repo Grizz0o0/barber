@@ -252,7 +252,7 @@ class BookingService {
     // Soft delete
     const deletedBooking = await BookingModel.findByIdAndUpdate(
       bookingId,
-      { isDeleted: true, deletedAt: new Date() },
+      { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
       { new: true }
     )
 

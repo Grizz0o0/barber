@@ -182,7 +182,11 @@ class ReviewService {
       throw new BadRequestError('Bạn không có quyền xóa đánh giá này')
     }
 
-    await ReviewModel.findByIdAndUpdate(reviewId, { isDeleted: true })
+    await ReviewModel.findByIdAndUpdate(reviewId, {
+      isDeleted: true,
+      deletedAt: new Date(),
+      deletedBy: userId
+    })
 
     if (review.product) {
       ReviewService.calcProductRating(review.product.toString()).catch((err) =>

@@ -34,7 +34,7 @@ class ProductController {
   static deleteProduct = async (req: Request, res: Response) => {
     new SuccessResponse({
       message: 'Delete product success',
-      metadata: await ProductService.deleteProduct(req.params.id)
+      metadata: await ProductService.deleteProduct(req.params.id, req.keyStore!.userId)
     }).send(res)
   }
 }

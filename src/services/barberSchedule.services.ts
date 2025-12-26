@@ -128,7 +128,7 @@ class BarberScheduleService {
     // Soft delete
     const deletedSchedule = await BarberScheduleModel.findByIdAndUpdate(
       scheduleId,
-      { isDeleted: true, deletedAt: new Date() },
+      { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
       { new: true }
     )
 

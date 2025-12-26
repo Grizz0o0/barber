@@ -34,7 +34,7 @@ class ServiceItemController {
   static deleteServiceItem = async (req: Request, res: Response) => {
     new SuccessResponse({
       message: 'Delete service success',
-      metadata: await ServiceItemService.deleteServiceItem(req.params.id)
+      metadata: await ServiceItemService.deleteServiceItem(req.params.id, req.keyStore!.userId)
     }).send(res)
   }
 }
