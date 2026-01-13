@@ -32,7 +32,9 @@ export const validateRequest = (schemas: SchemaGroup) => {
           })
           return
         }
-        req.params = result.data
+        // req.params cannot be reassigned directly
+        Object.keys(req.params).forEach((key) => delete (req.params as any)[key])
+        Object.assign(req.params, result.data)
       }
 
       if (schemas.query) {
@@ -44,7 +46,9 @@ export const validateRequest = (schemas: SchemaGroup) => {
           })
           return
         }
-        req.query = result.data
+        // req.query cannot be reassigned directly
+        Object.keys(req.query).forEach((key) => delete (req.query as any)[key])
+        Object.assign(req.query, result.data)
       }
 
       if (schemas.headers) {

@@ -12,11 +12,10 @@ export const authentication = async (req: Request, res: Response, next: NextFunc
     const keyStore = await KeyService.findByUserId(userId as string)
     if (!keyStore) throw new NotFoundError('KeyStore not found for user ID')
 
-    const accessToken = req.headers[HEADER.AUTHORIZATION] as string
+    const accessToken = (req.headers[HEADER.AUTHORIZATION] as string)?.replace('Bearer ', '')
     if (!accessToken) throw new UnauthorizedError('Missing access token')
 
     const decode = await verifyToken(accessToken, envConfig.JWT_SECRET_ACCESS_TOKEN)
-    console.log(`decode::: ${decode}`)
     if (userId !== decode.userId) throw new UnauthorizedError('Invalid user ID in token')
 
     req.keyStore = keyStore

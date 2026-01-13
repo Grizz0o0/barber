@@ -1,7 +1,8 @@
 export enum ProductCategory {
-  Keo = 'keo',
-  Gom = 'gôm',
   Wax = 'wax',
-  DauGoi = 'dầu gội',
-  Khac = 'khác'
+  Gel = 'gel',
+  Spray = 'spray',
+  Shampoo = 'shampoo',
+  Beard = 'beard',
+  Other = 'other'
 }

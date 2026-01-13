@@ -13,6 +13,7 @@ import { MomoPaymentConfirmResponse, MomoPaymentInitResponse } from '~/types/pay
 import { buildRawSignature, generateSignature } from '~/utils/payment.utils'
 import NotificationService from '~/services/notification.services'
 import { NotificationType } from '~/models/notification.model'
+import { BookingStatus, PaymentStatus as BookingPaymentStatus } from '~/constants/booking'
 
 class PaymentService {
   static async paymentMoMo(userId: string | ObjectId, payload: PaymentMoMoReqBody) {
@@ -126,14 +127,14 @@ class PaymentService {
     if (newStatus === PaymentStatus.SUCCESS) {
       if (updatedPayment.paymentFor === 'booking' && updatedPayment.booking) {
         await BookingModel.findByIdAndUpdate(updatedPayment.booking, {
-          status: 'confirmed', // From pending -> confirmed
-          paymentStatus: 'paid',
+          status: BookingStatus.Confirmed, // From pending -> confirmed
+          paymentStatus: BookingPaymentStatus.Paid,
           updatedAt: new Date()
         })
         SocketService.getInstance().emit('booking:updated', {
           _id: updatedPayment.booking,
-          status: 'confirmed',
-          paymentStatus: 'paid'
+          status: BookingStatus.Confirmed,
+          paymentStatus: BookingPaymentStatus.Paid
         })
       } else if (updatedPayment.paymentFor === 'order' && updatedPayment.order) {
         const order = await OrderModel.findById(updatedPayment.order)

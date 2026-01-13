@@ -9,34 +9,54 @@ import { Request, Response, NextFunction } from 'express'
 import router from '~/routes'
 import { ErrorResponse } from '~/responses/error.response'
 import { initFolder } from '~/utils/files.utils'
-import envConfig from '~/config/env.config'
 import { apiLimiter } from '~/middlewares/rateLimit.middleware'
+import mongoSanitize from 'express-mongo-sanitize'
+import envConfig from '~/config/env.config'
+import { initAdminAccount } from '~/services/initAdmin.services'
+import { startCronJobs } from '~/utils/cron'
 
 const app = express()
 //init folder
 initFolder()
+startCronJobs()
 
 // init middlewares
-app.use(morgan('dev'))
-app.use(helmet())
-app.use(compression())
-app.use(express.json({ limit: '10kb' })) // Body limit as requested
-app.use(express.urlencoded({ extended: true, limit: '10kb' }))
-import mongoSanitize from 'express-mongo-sanitize'
-app.use(mongoSanitize())
-app.use(apiLimiter)
-
 app.use(
   cors({
-    origin: envConfig.CLIENT_URL,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: [envConfig.CLIENT_URL, 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'x-api-key', 'authorization', 'x-client-id', 'x-rtoken-id']
   })
 )
+app.use(morgan('dev'))
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+  })
+)
+app.use(compression())
+app.use(
+  express
+    .json
+    // { limit: '50kb' }
+    ()
+)
+app.use(
+  express.urlencoded({
+    extended: true
+    // limit: '50kb'
+  })
+)
+
+// app.use(mongoSanitize({}))
+app.use(apiLimiter)
 
 // init db
 instanceMongodb
+
+// init admin
+initAdminAccount()
 
 // init route
 app.use('/', router)

@@ -15,3 +15,6 @@ export enum UserAuthProvider {
   Google = 'google',
   Facebook = 'facebook'
 }
+
+export const GENDERS = ['male', 'female', 'other'] as const
+export type Gender = (typeof GENDERS)[number]

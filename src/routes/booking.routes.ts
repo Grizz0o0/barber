@@ -8,7 +8,8 @@ import {
   createBookingSchema,
   deleteBookingSchema,
   getBookingSchema,
-  updateBookingSchema
+  updateBookingSchema,
+  emergencyActionSchema
 } from '~/requestSchemas/booking.request'
 
 const bookingRouter = Router()
@@ -18,6 +19,14 @@ bookingRouter.use(authentication)
 
 // Create Booking (Any authenticated user)
 bookingRouter.post('/', validateRequest(createBookingSchema), asyncHandler(BookingController.createBooking))
+
+// Emergency Action (Admin only)
+bookingRouter.post(
+  '/emergency',
+  authorizeRoles(UserRole.Admin),
+  validateRequest(emergencyActionSchema),
+  asyncHandler(BookingController.handleEmergency)
+)
 
 // Get Bookings
 // Can add logic in controller/service: Admin sees all, User sees only theirs.

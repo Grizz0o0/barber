@@ -28,13 +28,11 @@ const configSchema = z.object({
   JWT_SECRET_FORGOT_PASSWORD_TOKEN: z.string(),
 
   // Database Configuration (MongoDB)
-  DEV_DB_HOST: z.string(),
-  DEV_DB_PORT: z.string(),
   DEV_DB_NAME: z.string(),
+  DEV_DATABASE_URL: z.string(),
 
-  PRO_DB_HOST: z.string(),
-  PRO_DB_PORT: z.string(),
   PRO_DB_NAME: z.string(),
+  PRO_DATABASE_URL: z.string(),
 
   // Payment Configuration (Momo)
   MOMO_ACCESS_KEY: z.string(),

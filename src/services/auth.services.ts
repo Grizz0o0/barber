@@ -42,16 +42,10 @@ import { ObjectId } from 'mongodb'
 
 class AuthService {
   static login = async (payload: loginReqBodyType) => {
-    const parseResult = await loginSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError('Invalid login data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors))
-    }
-    const validatedData = parseResult.data
-
-    const foundUser = await UserModel.findOne({ email: validatedData.email })
+    const foundUser = await UserModel.findOne({ email: payload.email })
     if (!foundUser) throw new NotFoundError('Tài khoản chưa được tạo')
 
-    const isPasswordMatch = await bcrypt.compare(validatedData.password, foundUser.password)
+    const isPasswordMatch = await bcrypt.compare(payload.password, foundUser.password)
     if (!isPasswordMatch) throw new BadRequestError('Mật khẩu không chính xác')
 
     if (foundUser.verify !== UserVerifyStatus.Verified)
@@ -92,16 +86,8 @@ class AuthService {
   }
 
   static register = async (payload: registerReqBodyType | registerGoogleReqBodyType, isGoogle = false) => {
-    let parseResult
-    if (isGoogle) {
-      parseResult = await registerGoogleSchema.safeParseAsync(payload)
-    } else {
-      parseResult = await registerSchema.body.safeParseAsync(payload)
-    }
-    if (!parseResult.success) {
-      throw new BadRequestError('Invalid registration data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors))
-    }
-    const validatedData = parseResult.data
+    // Validation handled by middleware for public route, and trusted internal construction for Google OAuth
+    const validatedData = payload
     // Kiểm tra email đã tồn tại chưa
     const holderUser = await UserModel.findOne({ email: validatedData.email })
     if (holderUser) throw new BadRequestError('Email đã được sử dụng !')
@@ -341,12 +327,7 @@ class AuthService {
   }
 
   static resendVerifyEmail = async (payload: resendVerifyEmailReqBodyType) => {
-    const parseResult = await resendVerifyEmailSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError('Invalid resend email data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors))
-    }
-
-    const { email } = parseResult.data
+    const { email } = payload
 
     const foundUser = await UserModel.findOne({ email })
     if (!foundUser) throw new NotFoundError('Email not registered')
@@ -385,15 +366,7 @@ class AuthService {
   }
 
   static forgotPassword = async (payload: forgotPasswordReqBodyType) => {
-    const parseResult = await forgotPasswordSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError(
-        'Invalid forgot password data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors)
-      )
-    }
-    const validatedData = parseResult.data
-
-    const foundUser = await UserModel.findOne({ email: validatedData.email })
+    const foundUser = await UserModel.findOne({ email: payload.email })
     if (!foundUser) throw new NotFoundError('Email not registered')
     const secretKey = envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN
     const forgotPasswordToken = await createForgotPasswordToken({
@@ -407,7 +380,7 @@ class AuthService {
     })
     console.log(foundUser)
     try {
-      await sendForgotPasswordEmail(validatedData.email, forgotPasswordToken as string)
+      await sendForgotPasswordEmail(payload.email, forgotPasswordToken as string)
     } catch (error) {
       throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
     }
@@ -424,12 +397,7 @@ class AuthService {
   }
 
   static verifyEmail = async (payload: verifyEmailReqBodyType) => {
-    const parseResult = await verifyEmailSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError('Invalid verification data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors))
-    }
-    const validatedData = parseResult.data
-    const decode = await verifyToken(validatedData.verifyEmailToken, envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN)
+    const decode = await verifyToken(payload.verifyEmailToken, envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN)
     if (!decode) throw new BadRequestError('verify_token decode fail')
 
     const user = await UserModel.findById(decode.userId)
@@ -449,12 +417,7 @@ class AuthService {
   }
 
   static resendVerifyForgotPasswordEmail = async (payload: resendForgotPasswordReqBodyType) => {
-    const parseResult = await resendForgotPasswordSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError('Invalid resend email data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors))
-    }
-
-    const { email } = parseResult.data
+    const { email } = payload
 
     const foundUser = await UserModel.findOne({ email })
     if (!foundUser) throw new NotFoundError('Email not registered')
@@ -489,12 +452,7 @@ class AuthService {
   }
 
   static verifyForgotPassword = async (payload: verifyForgotPasswordReqBodyType) => {
-    const parseResult = await verifyForgotPasswordSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError('Invalid verification data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors))
-    }
-    const validatedData = parseResult.data
-    const decode = await verifyToken(validatedData.forgotPasswordToken, envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN)
+    const decode = await verifyToken(payload.forgotPasswordToken, envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN)
     if (!decode) throw new BadRequestError('forgot_token decode fail')
 
     const foundUser = await UserModel.findById(decode.userId)
@@ -503,25 +461,17 @@ class AuthService {
   }
 
   static resetPassword = async (payload: resetPasswordReqBodyType) => {
-    const parseResult = await resetPasswordSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError(
-        'Invalid reset password data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors)
-      )
-    }
-    const validatedData = parseResult.data
-
-    const decode = await verifyToken(validatedData.forgotPasswordToken, envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN)
+    const decode = await verifyToken(payload.forgotPasswordToken, envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN)
     if (!decode) throw new BadRequestError('forgot_token decode fail')
 
     const foundUser = await UserModel.findById(decode.userId)
     if (!foundUser) throw new NotFoundError('User not found')
-    if (foundUser.forgotPasswordToken !== validatedData.forgotPasswordToken)
+    if (foundUser.forgotPasswordToken !== payload.forgotPasswordToken)
       throw new BadRequestError(
         'Vui lòng yêu cầu lại email để đặt lại mật khẩu.Link đặt lại mật khẩu không còn hiệu lực hoặc đã được sử dụng.'
       )
 
-    const passwordHash = bcrypt.hashSync(validatedData.password, 10)
+    const passwordHash = bcrypt.hashSync(payload.password, 10)
     const result = await UserModel.findByIdAndUpdate(
       foundUser._id,
       {
@@ -540,21 +490,13 @@ class AuthService {
   }
 
   static changePassword = async (userId: string | ObjectId, payload: changePasswordReqBodyType) => {
-    const parseResult = await changePasswordSchema.body.safeParseAsync(payload)
-    if (!parseResult.success) {
-      throw new BadRequestError(
-        'Invalid change password data: ' + JSON.stringify(parseResult.error.flatten().fieldErrors)
-      )
-    }
-    const validatedData = parseResult.data
-
     const foundUser = await UserModel.findById(userId)
     if (!foundUser) throw new NotFoundError('Not found user')
 
-    const isPasswordMatch = await bcrypt.compare(validatedData.password, foundUser.password)
+    const isPasswordMatch = await bcrypt.compare(payload.password, foundUser.password)
     if (!isPasswordMatch) throw new BadRequestError('Password is not match')
 
-    const passwordHash = bcrypt.hashSync(validatedData.newPassword, 10)
+    const passwordHash = bcrypt.hashSync(payload.newPassword, 10)
     const result = await UserModel.findByIdAndUpdate(foundUser._id, { $set: { password: passwordHash } }, { new: true })
     return getInfoData({ fields: ['_id', 'name', 'email', 'phone'], object: result })
   }

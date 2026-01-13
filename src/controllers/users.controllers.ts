@@ -39,6 +39,26 @@ class UsersController {
       metadata: await UserService.getUserById(userId)
     }).send(res)
   }
+  static getBarbers = async (req: Request, res: Response) => {
+    new SuccessResponse({
+      message: 'Get barbers success',
+      metadata: await UserService.getBarbers()
+    }).send(res)
+  }
+
+  static updateUser = async (req: Request, res: Response) => {
+    new SuccessResponse({
+      message: 'Update user success',
+      metadata: await UserService.updateUser(req.params.id, req.body)
+    }).send(res)
+  }
+
+  static createUser = async (req: Request, res: Response) => {
+    new SuccessResponse({
+      message: 'Create user success',
+      metadata: await UserService.createUser(req.body)
+    }).send(res)
+  }
 }
 
 export default UsersController

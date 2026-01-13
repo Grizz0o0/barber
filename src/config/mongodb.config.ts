@@ -6,9 +6,8 @@ interface AppConfig {
     port: number | string
   }
   database: {
-    host: string
-    port: number | string
     name: string
+    databaseUrl?: string
   }
 }
 
@@ -17,9 +16,8 @@ const dev: AppConfig = {
     port: envConfig.APP_PORT || 3052
   },
   database: {
-    host: envConfig.DEV_DB_HOST || 'localhost',
-    port: envConfig.DEV_DB_PORT || 27017,
-    name: envConfig.DEV_DB_NAME || 'BarberDev'
+    name: envConfig.DEV_DB_NAME || 'BarberDev',
+    databaseUrl: envConfig.DEV_DATABASE_URL || 'mongodb://localhost:27017/BarberDev'
   }
 }
 
@@ -28,9 +26,8 @@ const pro: AppConfig = {
     port: envConfig.APP_PORT || 3052
   },
   database: {
-    host: envConfig.PRO_DB_HOST || 'localhost',
-    port: envConfig.PRO_DB_PORT || 27017,
-    name: envConfig.PRO_DB_NAME || 'BarberPro'
+    name: envConfig.PRO_DB_NAME || 'BarberPro',
+    databaseUrl: envConfig.PRO_DATABASE_URL || 'mongodb://localhost:27017/BarberPro'
   }
 }
 

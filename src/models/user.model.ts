@@ -1,5 +1,5 @@
 import { Schema, model, Document, Types } from 'mongoose'
-import { UserRole, UserVerifyStatus, UserAuthProvider } from '../constants/user'
+import { UserRole, UserVerifyStatus, UserAuthProvider, GENDERS, type Gender } from '../constants/user'
 
 interface IUser extends Document {
   name: string
@@ -14,11 +14,15 @@ interface IUser extends Document {
     city?: string
     country: string
   }
+  gender?: Gender
   verify: UserVerifyStatus
   avatar?: string
   isActive: boolean
   rating?: number
   ratingCount?: number
+  experience?: number
+  specialty?: string
+  bio?: string
   forgotPasswordToken?: string
   forgotPasswordExpire?: Date
   resetPasswordToken?: string
@@ -56,6 +60,7 @@ const userSchema = new Schema<IUser>(
       city: String,
       country: { type: String, default: 'Vietnam' }
     },
+    gender: { type: String, enum: GENDERS },
     verify: {
       type: String,
       enum: [UserVerifyStatus.Unverified, UserVerifyStatus.Verified],
@@ -65,6 +70,9 @@ const userSchema = new Schema<IUser>(
     isActive: { type: Boolean, default: true },
     rating: { type: Number, default: 0 },
     ratingCount: { type: Number, default: 0 },
+    experience: { type: Number, default: 0 },
+    specialty: String,
+    bio: String,
     forgotPasswordToken: String,
     forgotPasswordExpire: Date,
     resetPasswordToken: String,

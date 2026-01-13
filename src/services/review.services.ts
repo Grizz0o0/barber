@@ -198,7 +198,13 @@ class ReviewService {
       ReviewModel.countDocuments(filter),
       ReviewModel.find(filter)
         .populate('user', 'name avatar')
-        .populate('product', 'name image') // Optional
+        .populate('product', 'name images') // Optional
+        .populate('barber', 'name avatar') // Populate barber info
+        .populate({
+          path: 'booking',
+          select: 'service',
+          populate: { path: 'service', select: 'name duration price' }
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit || 10)

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { GENDERS } from '../constants/user'
 
 export const PaginationParams = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -36,11 +37,14 @@ export const updateMeSchema = {
       .optional(),
     email: z.email('Email không hợp lệ').trim().optional(),
     avatar: z.string({ error: 'Avatar phải là chuỗi' }).trim().optional(),
-    phone: z
-      .string()
-      .trim()
-      .regex(/^0\d{9,10}$/, 'Số điện thoại không hợp lệ (bắt đầu bằng 0, 10-11 số)')
-      .optional(),
+    phone: z.preprocess(
+      (val) => (val === '' ? undefined : val),
+      z
+        .string()
+        .trim()
+        .regex(/^0\d{9,10}$/, 'Số điện thoại không hợp lệ (bắt đầu bằng 0, 10-11 số)')
+        .optional()
+    ),
     address: z
       .object({
         street: z.string().optional(),
@@ -48,12 +52,9 @@ export const updateMeSchema = {
         city: z.string().optional(),
         country: z.string().optional()
       })
-      .optional()
-  }),
-  params: z.object({
-    id: z.string().trim().min(1, {
-      message: 'Id không được để trống'
-    })
+      .optional(),
+    gender: z.enum(GENDERS).optional(),
+    experience: z.coerce.number().min(0, 'Kinh nghiệm phải là số không âm').optional()
   })
 }
 export type updateMeReqBodyType = z.infer<typeof updateMeSchema.body>
@@ -68,3 +69,21 @@ export const getListUserSchema = {
 }
 
 export type getListUserTypeQuery = z.infer<typeof getListUserSchema.query>
+
+export const updateUserSchema = {
+  params: z.object({
+    id: z.string().trim().min(1, {
+      message: 'Id không được để trống'
+    })
+  }),
+  body: z.object({
+    isActive: z.boolean().optional(),
+    role: z.string().optional(), // Maybe needed later
+    name: z.string().optional(),
+    email: z.string().optional(),
+    avatar: z.string().optional(),
+    phone: z.string().optional()
+  })
+}
+export type updateUserReqParamsType = z.infer<typeof updateUserSchema.params>
+export type updateUserReqBodyType = z.infer<typeof updateUserSchema.body>

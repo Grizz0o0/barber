@@ -4,6 +4,7 @@ import mediasRouter from './medias.routes'
 import authRouter from './auth.routes'
 import usersRouter from './user.routes'
 import productRouter from './product.routes'
+import systemConfigRouter from './systemConfig.routes'
 import serviceItemRouter from './serviceItem.routes'
 import barberScheduleRouter from './barberSchedule.routes'
 import bookingRouter from './booking.routes'
@@ -13,10 +14,12 @@ import promotionRouter from './promotion.routes'
 import paymentRouter from './payment.routes'
 import reviewRouter from './review.routes'
 import notificationRouter from './notification.routes'
+import statisticsRouter from './statistics.routes'
 const router = Router()
 
 router.use('/medias', mediasRouter)
 router.use('/products', productRouter)
+router.use('/system-configs', systemConfigRouter)
 router.use('/services', serviceItemRouter)
 router.use('/barber-schedules', barberScheduleRouter)
 router.use('/bookings', bookingRouter)
@@ -28,6 +31,7 @@ router.use('/reviews', reviewRouter)
 router.use('/notifications', notificationRouter)
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
+router.use('/statistics', statisticsRouter)
 
 router.get('/', (req, res) => {
   res.status(200).json({

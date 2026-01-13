@@ -23,8 +23,8 @@ class MediasService {
         return mediaSchema.parse({
           name: `${newName}.jpg`,
           url: isProduction
-            ? `${envConfig.HOST}/v1/api/medias/static/image/${newName}.jpg`
-            : `http://localhost:${envConfig.APP_PORT}/v1/api/medias/static/image/${newName}.jpg`,
+            ? `${envConfig.HOST}/medias/static/image/${newName}.jpg`
+            : `http://localhost:${envConfig.APP_PORT}/medias/static/image/${newName}.jpg`,
           type: MediaType.Image
         })
       })

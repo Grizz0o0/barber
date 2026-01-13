@@ -3,8 +3,8 @@ import config from '../config/mongodb.config'
 import { countConnect } from '../helpers/check.connect'
 import envConfig from '../config/env.config'
 
-const { host, name, port } = config.database
-const connectString = `mongodb://${host}:${port}/${name}`
+const { name, databaseUrl } = config.database
+const connectString = databaseUrl || `mongodb://localhost:27017/${name}`
 
 class Database {
   private static instance: Database

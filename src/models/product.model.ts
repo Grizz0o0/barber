@@ -26,14 +26,8 @@ const productSchema = new Schema<IProduct>(
     name: { type: String, required: [true, 'Tên sản phẩm là bắt buộc'] },
     category: {
       type: String,
-      enum: [
-        ProductCategory.Keo,
-        ProductCategory.Gom,
-        ProductCategory.Wax,
-        ProductCategory.DauGoi,
-        ProductCategory.Khac
-      ],
-      default: ProductCategory.Khac
+      enum: Object.values(ProductCategory),
+      default: ProductCategory.Other
     },
     price: { type: Number, required: [true, 'Giá là bắt buộc'], min: [0, 'Giá phải >= 0'] },
     stock: { type: Number, default: 0, min: [0, 'Kho phải >= 0'] },

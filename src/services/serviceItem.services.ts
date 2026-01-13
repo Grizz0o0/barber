@@ -7,6 +7,8 @@ import {
   GetListServiceItemQuery
 } from '~/requestSchemas/serviceItem.request'
 import { ObjectId } from 'mongodb'
+import BookingModel from '~/models/booking.model'
+import { BookingStatus } from '~/constants/booking'
 
 class ServiceItemService {
   static createServiceItem = async (payload: CreateServiceItemReqBody) => {
@@ -70,7 +72,19 @@ class ServiceItemService {
     const foundService = await ServiceItemModel.findOne({ _id: serviceId, isDeleted: false })
     if (!foundService) throw new NotFoundError('Service not found')
 
-    // Soft delete
+    // 1. Check for active future bookings
+    const hasActiveBookings = await BookingModel.findOne({
+      service: serviceId,
+      status: { $in: [BookingStatus.Pending, BookingStatus.Confirmed] },
+      startTime: { $gte: new Date() },
+      isDeleted: false
+    })
+
+    if (hasActiveBookings) {
+      throw new BadRequestError('Không thể xóa dịch vụ vì còn lịch hẹn chưa hoàn thành trong tương lai')
+    }
+
+    // 2. Soft delete
     const deletedService = await ServiceItemModel.findByIdAndUpdate(
       serviceId,
       { isDeleted: true, deletedAt: new Date(), deletedBy: userId },

@@ -8,7 +8,7 @@ class CartService {
   static getCart = async (userId: string | ObjectId) => {
     let cart = await CartModel.findOne({ user: userId, isDeleted: false }).populate(
       'items.product',
-      'name price image category'
+      'name price images category'
     )
     if (!cart) {
       // Create empty cart if not exists
@@ -57,7 +57,7 @@ class CartService {
     }
 
     await cart.save()
-    return await cart.populate('items.product', 'name price image category')
+    return await cart.populate('items.product', 'name price images category')
   }
 
   static updateItemQuantity = async (userId: string | ObjectId, { product, quantity }: UpdateCartItemReqBody) => {
@@ -76,7 +76,7 @@ class CartService {
 
     cart.items[itemIndex].quantity = quantity
     await cart.save()
-    return await cart.populate('items.product', 'name price image category')
+    return await cart.populate('items.product', 'name price images category')
   }
 
   static removeItem = async (userId: string | ObjectId, productId: string) => {
@@ -86,7 +86,7 @@ class CartService {
     cart.items = cart.items.filter((item) => item.product.toString() !== productId)
 
     await cart.save()
-    return await cart.populate('items.product', 'name price image category')
+    return await cart.populate('items.product', 'name price images category')
   }
 
   static clearCart = async (userId: string | ObjectId) => {

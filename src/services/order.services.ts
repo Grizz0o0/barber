@@ -8,6 +8,7 @@ import { CreateOrderReqBody, UpdateOrderReqBody, GetOrderQuery } from '~/request
 import SocketService from '~/services/socket.services'
 import PromotionService from '~/services/promotion.services'
 import { ObjectId } from 'mongodb'
+import { UserRole } from '~/constants/user'
 import { sendOrderSuccessEmail } from '~/utils/email.utils'
 import NotificationService from '~/services/notification.services'
 import { NotificationType } from '~/models/notification.model'
@@ -143,7 +144,7 @@ class OrderService {
     if (status) filter.status = status
 
     // Authorization: If not Admin, forced to see own orders
-    if (role !== 'Admin') {
+    if (role !== UserRole.Admin) {
       filter.user = new ObjectId(userId)
     } else {
       // If Admin, can filter by user if provided
@@ -173,7 +174,7 @@ class OrderService {
     if (!foundOrder) throw new NotFoundError('Order not found')
 
     // Ownership check
-    if (role !== 'Admin' && foundOrder.user._id.toString() !== userId.toString()) {
+    if (role !== UserRole.Admin && foundOrder.user._id.toString() !== userId.toString()) {
       throw new NotFoundError('Order not found') // conceal existence
     }
 
@@ -187,12 +188,12 @@ class OrderService {
     if (!foundOrder) throw new NotFoundError('Order not found')
 
     // Ownership check
-    if (role !== 'Admin' && foundOrder.user.toString() !== userId.toString()) {
+    if (role !== UserRole.Admin && foundOrder.user.toString() !== userId.toString()) {
       throw new NotFoundError('Order not found')
     }
 
     // Role-based constraints
-    if (role !== 'Admin') {
+    if (role !== UserRole.Admin) {
       // User can only Cancel processing orders
       if (status && status === 'cancelled') {
         if (foundOrder.status !== 'processing') {

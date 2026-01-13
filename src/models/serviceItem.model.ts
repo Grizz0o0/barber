@@ -4,6 +4,7 @@ interface IService extends Document {
   name: string
   price: number
   duration: number
+  bufferTime?: number
   description?: string
   images?: string[]
   isActive: boolean
@@ -21,6 +22,7 @@ const ServiceItemSchema = new Schema<IService>(
     name: { type: String, required: [true, 'Tên dịch vụ là bắt buộc'] },
     price: { type: Number, required: [true, 'Giá là bắt buộc'], min: [0, 'Giá phải >= 0'] },
     duration: { type: Number, required: [true, 'Thời lượng là bắt buộc'], min: [15, 'Thời lượng ít nhất 15 phút'] },
+    bufferTime: { type: Number, default: 0, min: [0, 'Thời gian đệm phải >= 0'] },
     description: String,
     images: [String],
     isActive: { type: Boolean, default: true },

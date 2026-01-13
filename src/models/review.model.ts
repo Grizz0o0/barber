@@ -37,7 +37,10 @@ const reviewSchema = new Schema<IReview>(
   { timestamps: true }
 )
 
-reviewSchema.index({ user: 1, product: 1 }, { unique: true, sparse: true })
+reviewSchema.index(
+  { user: 1, product: 1 },
+  { unique: true, partialFilterExpression: { product: { $type: 'objectId' } } }
+)
 reviewSchema.index({ user: 1, booking: 1 }, { unique: true, sparse: true })
 reviewSchema.index({ createdAt: -1 })
 reviewSchema.index({ product: 1, createdAt: -1 })
