@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import AuthService from '~/services/auth.services'
 import { Created, SuccessResponse } from '~/responses/success.response'
+import envConfig from '~/config/env.config'
 
 class AuthController {
   static register = async (req: Request, res: Response) => {
@@ -76,10 +77,11 @@ class AuthController {
 
   static oAuthGoogle = async (req: Request, res: Response) => {
     const { code } = req.query
-    new SuccessResponse({
-      message: 'OAuth Google success',
-      metadata: await AuthService.oAuthGoogle(code as string)
-    }).send(res)
+    const result = await AuthService.oAuthGoogle(code as string)
+    const { accessToken, refreshToken, userId } = result
+    return res.redirect(
+      `${envConfig.CLIENT_URL}/oauth/google?accessToken=${accessToken}&refreshToken=${refreshToken}&userId=${userId}`
+    )
   }
 }
 

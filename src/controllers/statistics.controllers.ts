@@ -7,6 +7,8 @@ import Service from '~/models/serviceItem.model'
 import { UserRole } from '~/constants/user'
 import { BookingStatus } from '~/constants/booking'
 
+import ExcelJS from 'exceljs'
+
 class StatisticsController {
   getDashboardStats = async (req: Request, res: Response, next: NextFunction) => {
     const { period = 'month' } = req.query as { period?: string }
@@ -245,7 +247,7 @@ class StatisticsController {
         })),
         recentBookings: recentBookings.map((b) => ({
           id: b._id,
-          customer: (b.user as any)?.name || 'Unknown',
+          customer: (b.user as any)?.name || null,
           serviceName: (b.service as any)?.name || 'Unknown',
           barberName: (b.barber as any)?.name || 'Unknown',
           time: new Date(b.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
@@ -253,6 +255,49 @@ class StatisticsController {
         }))
       }
     }).send(res)
+  }
+
+  getExportRevenue = async (req: Request, res: Response, next: NextFunction) => {
+    const bookings = await Booking.find({
+      status: BookingStatus.Completed
+    })
+      .populate('user', 'name')
+      .populate('barber', 'name')
+      .populate('service', 'name')
+      .sort({ createdAt: -1 })
+      .lean()
+
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Revenue Report')
+
+    worksheet.columns = [
+      { header: 'Booking ID', key: '_id', width: 30 },
+      { header: 'Date', key: 'createdAt', width: 15 },
+      { header: 'Customer', key: 'customer', width: 20 },
+      { header: 'Barber', key: 'barber', width: 20 },
+      { header: 'Service', key: 'service', width: 20 },
+      { header: 'Price', key: 'totalPrice', width: 15 }
+    ]
+
+    bookings.forEach((booking: any) => {
+      worksheet.addRow({
+        _id: booking._id,
+        createdAt: new Date(booking.createdAt).toISOString().split('T')[0],
+        customer: booking.user?.name || 'Vãng lai',
+        barber: booking.barber?.name || 'Unknown',
+        service: booking.service?.name || 'Unknown',
+        totalPrice: booking.totalPrice
+      })
+    })
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true }
+
+    res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.attachment('revenue-report.xlsx')
+
+    await workbook.xlsx.write(res)
+    res.end()
   }
 }
 

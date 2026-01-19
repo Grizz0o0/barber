@@ -9,6 +9,7 @@ interface IReview extends Document {
   comment?: string
   images: string[]
   reply?: string
+  likes: Types.ObjectId[]
   isDeleted: boolean
   deletedAt?: Date
   createdBy?: Types.ObjectId
@@ -28,6 +29,7 @@ const reviewSchema = new Schema<IReview>(
     comment: String,
     images: [{ type: String }],
     reply: { type: String, trim: true },
+    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     isDeleted: { type: Boolean, default: false },
     deletedAt: Date,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -45,6 +47,7 @@ reviewSchema.index({ user: 1, booking: 1 }, { unique: true, sparse: true })
 reviewSchema.index({ createdAt: -1 })
 reviewSchema.index({ product: 1, createdAt: -1 })
 reviewSchema.index({ isDeleted: 1, createdAt: -1 })
+reviewSchema.index({ likes: 1 })
 
 // Hook post-save can be used, but we calculate explicitly in Service for better control.
 

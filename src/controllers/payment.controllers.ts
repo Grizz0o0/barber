@@ -38,6 +38,13 @@ class PaymentController {
       metadata: await PaymentService.getPaymentById(req.params.id)
     }).send(res)
   }
+
+  static getPaymentByTransactionId = async (req: Request, res: Response) => {
+    new SuccessResponse({
+      message: 'Get payment detail success',
+      metadata: await PaymentService.getPaymentByTransactionId(req.params.id)
+    }).send(res)
+  }
 }
 
 export default PaymentController

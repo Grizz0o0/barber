@@ -10,5 +10,6 @@ router.use(authentication)
 router.use(authorizeRoles(UserRole.Admin))
 
 router.get('/', asyncHandler(statisticsController.getDashboardStats))
+router.get('/export', asyncHandler(statisticsController.getExportRevenue))
 
 export default router

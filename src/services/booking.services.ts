@@ -182,8 +182,8 @@ class BookingService {
     // Push Notification to Barber
     NotificationService.pushNotification({
       userId: barber,
-      title: 'Lịch hẹn mới',
-      message: `Khách hàng đã đặt lịch hẹn lúc ${newBooking.startTime.toLocaleString()}`,
+      title: '📅 Lịch hẹn mới!',
+      message: `Bạn có khách mới ${guestName || (customerUser ? customerUser.name : 'Khách hàng')} đặt lúc ${newBooking.startTime.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}`,
       type: NotificationType.Booking,
       referenceId: newBooking._id
     }).catch(console.error)
@@ -396,15 +396,32 @@ class BookingService {
 
     // Notify User if status changed to confirmed/cancelled/completed
     if (payload.status && payload.status !== foundBooking.status) {
+      const formattedTime = new Date(updatedBooking.startTime).toLocaleString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit'
+      })
+      let title = 'Thông báo lịch hẹn'
       let message = ''
-      if (payload.status === BookingStatus.Confirmed) message = 'Lịch hẹn của bạn đã được xác nhận'
-      if (payload.status === BookingStatus.Cancelled) message = 'Lịch hẹn của bạn đã bị hủy'
-      if (payload.status === BookingStatus.Completed) message = 'Cảm ơn bạn đã sử dụng dịch vụ'
+
+      if (payload.status === BookingStatus.Confirmed) {
+        title = '✅ Đã xác nhận lịch hẹn'
+        message = `Lịch hẹn lúc ${formattedTime} của bạn đã được xác nhận. Hẹn gặp bạn nhé!`
+      }
+      if (payload.status === BookingStatus.Cancelled) {
+        title = '❌ Lịch hẹn bị hủy'
+        message = `Lịch hẹn lúc ${formattedTime} đã bị hủy. Rất tiếc vì sự bất tiện này.`
+      }
+      if (payload.status === BookingStatus.Completed) {
+        title = '🎉 Dịch vụ hoàn tất'
+        message = 'Cảm ơn bạn đã ghé thăm! Hãy dành chút thời gian đánh giá dịch vụ nhé.'
+      }
 
       if (message && updatedBooking.user) {
         NotificationService.pushNotification({
           userId: updatedBooking.user,
-          title: 'Cập nhật lịch hẹn',
+          title,
           message,
           type: NotificationType.Booking,
           referenceId: updatedBooking._id

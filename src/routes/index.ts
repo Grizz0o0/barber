@@ -15,12 +15,16 @@ import paymentRouter from './payment.routes'
 import reviewRouter from './review.routes'
 import notificationRouter from './notification.routes'
 import statisticsRouter from './statistics.routes'
+import aiRouter from './ai.routes'
+import chatRouter from './chat.routes'
 const router = Router()
 
+router.use('/ai', aiRouter)
 router.use('/medias', mediasRouter)
 router.use('/products', productRouter)
 router.use('/system-configs', systemConfigRouter)
 router.use('/services', serviceItemRouter)
+router.use('/chat', chatRouter)
 router.use('/barber-schedules', barberScheduleRouter)
 router.use('/bookings', bookingRouter)
 router.use('/cart', cartRouter)

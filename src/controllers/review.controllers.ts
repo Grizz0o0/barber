@@ -44,6 +44,22 @@ class ReviewController {
       metadata: await ReviewService.replyReview(userId, req.params.id, req.body, role)
     }).send(res)
   }
+
+  static likeReview = async (req: Request, res: Response) => {
+    const { userId } = req.keyStore!
+    new SuccessResponse({
+      message: 'Like/Unlike review success',
+      metadata: await ReviewService.likeReview(userId, req.params.id)
+    }).send(res)
+  }
+
+  static getLikedReviews = async (req: Request, res: Response) => {
+    const { userId } = req.keyStore!
+    new SuccessResponse({
+      message: 'Get liked reviews success',
+      metadata: await ReviewService.getLikedReviews(userId, Number(req.query.limit), Number(req.query.page))
+    }).send(res)
+  }
 }
 
 export default ReviewController

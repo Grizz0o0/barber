@@ -16,14 +16,11 @@ import { initAdminAccount } from '~/services/initAdmin.services'
 import { startCronJobs } from '~/utils/cron'
 
 const app = express()
-//init folder
-initFolder()
-startCronJobs()
 
 // init middlewares
 app.use(
   cors({
-    origin: [envConfig.CLIENT_URL, 'http://localhost:3000'],
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'x-api-key', 'authorization', 'x-client-id', 'x-rtoken-id']
@@ -52,12 +49,6 @@ app.use(
 // app.use(mongoSanitize({}))
 app.use(apiLimiter)
 
-// init db
-instanceMongodb
-
-// init admin
-initAdminAccount()
-
 // init route
 app.use('/', router)
 
@@ -74,7 +65,7 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     status: 'error',
     code: statusCode,
     message: error.message || 'Internal Server Error',
-    stack: error.stack
+    stack: envConfig.NODE_ENV === 'dev' ? error.stack : undefined
   })
 })
 

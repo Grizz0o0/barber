@@ -23,6 +23,7 @@ paymentRouter.post('/momo', validateRequest(paymentMoMoSchema), asyncHandler(Pay
 paymentRouter.get('/', validateRequest(getPaymentSchema), asyncHandler(PaymentController.getListPayments))
 
 // Detail
+paymentRouter.get('/transaction/:id', asyncHandler(PaymentController.getPaymentByTransactionId))
 paymentRouter.get('/:id', asyncHandler(PaymentController.getPaymentById))
 
 // Update Status (Admin Only) - Manual correction

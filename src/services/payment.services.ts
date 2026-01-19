@@ -90,7 +90,8 @@ class PaymentService {
     } catch (error: any) {
       // If MoMo init fails, maybe delete the pending payment? Or keep it as failed?
       await PaymentModel.findByIdAndUpdate(newPayment._id, { status: PaymentStatus.FAILED })
-      throw new BadRequestError(`MoMo Init Error: ${error.message}`)
+      console.error('MoMo Init Error Details:', error.response?.data)
+      throw new BadRequestError(`MoMo Init Error: ${error.message} - ${JSON.stringify(error.response?.data)}`)
     }
   }
 
@@ -227,6 +228,12 @@ class PaymentService {
 
   static async getPaymentById(id: string) {
     const payment = await PaymentModel.findOne({ _id: id, isDeleted: false })
+    if (!payment) throw new NotFoundError('Payment not found')
+    return payment
+  }
+
+  static async getPaymentByTransactionId(transactionId: string) {
+    const payment = await PaymentModel.findOne({ transactionId, isDeleted: false })
     if (!payment) throw new NotFoundError('Payment not found')
     return payment
   }

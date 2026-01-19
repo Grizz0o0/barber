@@ -494,6 +494,7 @@ const seedData = async () => {
     }
     await mongoose.connect(mongoUri)
     console.log('📦 Connected to MongoDB')
+    const hashedPassword = await bcrypt.hash('Zz@26112003', 10)
 
     // Clean DB
     await Promise.all([
@@ -517,7 +518,7 @@ const seedData = async () => {
       _id: b._id,
       name: b.name,
       email: `barber${i + 1}@barber.com`,
-      password: '123456',
+      password: hashedPassword,
       role: UserRole.Barber,
       verify: UserVerifyStatus.Verified,
       avatar: b.avatar,
@@ -595,7 +596,7 @@ const seedData = async () => {
       name: c.name,
       email: c.email,
       phone: c.phone,
-      password: '123456',
+      password: hashedPassword,
       role: UserRole.Customer,
       verify: UserVerifyStatus.Verified,
       avatar: `https://ui-avatars.com/api/?name=${c.name.split(' ').join('+')}&background=random`,

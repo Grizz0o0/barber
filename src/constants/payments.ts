@@ -1,6 +1,6 @@
 export enum PaymentMethod {
   ZALOPAY = 'zalopay',
-  MOMO = 'momo'
+  MOMO = 'Momo'
 }
 
 export enum PaymentStatus {

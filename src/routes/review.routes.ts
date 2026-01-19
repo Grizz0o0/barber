@@ -20,7 +20,9 @@ reviewRouter.get('/', validateRequest(getReviewSchema), asyncHandler(ReviewContr
 reviewRouter.use(authentication)
 
 reviewRouter.post('/', validateRequest(createReviewSchema), asyncHandler(ReviewController.createReview))
+reviewRouter.get('/likes', asyncHandler(ReviewController.getLikedReviews))
 reviewRouter.patch('/:id', validateRequest(updateReviewSchema), asyncHandler(ReviewController.updateReview))
+reviewRouter.post('/:id/like', asyncHandler(ReviewController.likeReview))
 reviewRouter.delete('/:id', asyncHandler(ReviewController.deleteReview))
 
 // Admin/Barber logic

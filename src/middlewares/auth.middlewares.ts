@@ -31,17 +31,14 @@ export const authenticationV2 = async (req: Request, res: Response, next: NextFu
   try {
     const userId = req.headers[HEADER.CLIENT_ID]
     if (!userId) throw new UnauthorizedError('Missing client ID')
-    console.log(`userId:::${userId}`)
 
     const keyStore = await KeyService.findByUserId(userId as string)
-    console.log(keyStore)
     if (!keyStore) throw new NotFoundError('KeyStore not found for user ID')
 
     const refreshToken = req.headers[HEADER.REFRESHTOKEN] as string
     if (!refreshToken) throw new UnauthorizedError('Missing refreshToken')
 
     const decode = await verifyToken(refreshToken, envConfig.JWT_SECRET_REFRESH_TOKEN)
-    console.log(`decode::: ${decode}`)
     if (userId !== decode.userId) throw new UnauthorizedError('Invalid user ID in token')
 
     req.refreshToken = refreshToken

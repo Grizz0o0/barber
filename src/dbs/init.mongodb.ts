@@ -9,28 +9,28 @@ const connectString = databaseUrl || `mongodb://localhost:27017/${name}`
 class Database {
   private static instance: Database
 
-  private constructor() {
-    this.connect()
-  }
+  private constructor() {}
 
   // Phương thức kết nối
-  private connect(type: string = 'mongodb'): void {
+  public connect(type: string = 'mongodb'): Promise<typeof mongoose> {
     // Enable debug mode trong môi trường development
     if (envConfig.NODE_ENV === 'dev') {
       mongoose.set('debug', true)
       mongoose.set('debug', { color: true })
     }
 
-    mongoose
+    return mongoose
       .connect(connectString, {
         maxPoolSize: 50
       })
-      .then(() => {
+      .then((mongooseInstance) => {
         console.log(`Connected MongoDB Success: ${name}`)
         countConnect()
+        return mongooseInstance
       })
       .catch((err) => {
         console.error('Error Connect:', err)
+        throw err
       })
   }
 

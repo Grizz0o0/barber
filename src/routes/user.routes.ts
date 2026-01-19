@@ -26,12 +26,7 @@ usersRouter.get(
   asyncHandler(UsersController.getAllUsers)
 )
 
-usersRouter.post(
-  '/',
-  authorizeRoles(UserRole.Admin),
-  // validateRequest(createUserSchema), // TODO: Create schema later if strict validation needed
-  asyncHandler(UsersController.createUser)
-)
+usersRouter.post('/', authorizeRoles(UserRole.Admin), asyncHandler(UsersController.createUser))
 usersRouter.get('/me', asyncHandler(UsersController.getMe))
 usersRouter.patch('/me', validateRequest(updateMeSchema), asyncHandler(UsersController.updateMe))
 usersRouter.patch(

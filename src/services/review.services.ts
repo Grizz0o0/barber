@@ -292,13 +292,57 @@ class ReviewService {
     // Notify user about reply
     NotificationService.pushNotification({
       userId: review.user,
-      title: 'Phản hồi đánh giá',
-      message: 'Admin/Cửa hàng đã phản hồi đánh giá của bạn',
+      title: '💬 Shop đã trả lời đánh giá',
+      message: 'Cửa hàng đã phản hồi về đánh giá của bạn. Nhấn để xem chi tiết.',
       type: NotificationType.Review,
       referenceId: review._id
     }).catch((err) => logger.error('[ReviewService.replyReview] Failed to push notification:', err))
 
     return review
+  }
+
+  static likeReview = async (userId: string | ObjectId, reviewId: string) => {
+    const review = await ReviewModel.findOne({ _id: reviewId, isDeleted: false })
+    if (!review) throw new NotFoundError('Review not found')
+
+    const uid = new ObjectId(userId)
+    const isLiked = review.likes.some((id) => id.toString() === uid.toString())
+
+    let updatedReview
+    if (isLiked) {
+      updatedReview = await ReviewModel.findByIdAndUpdate(reviewId, { $pull: { likes: uid } }, { new: true })
+    } else {
+      updatedReview = await ReviewModel.findByIdAndUpdate(reviewId, { $addToSet: { likes: uid } }, { new: true })
+    }
+    if (!updatedReview) throw new NotFoundError('Review not found')
+    return updatedReview
+  }
+
+  static getLikedReviews = async (userId: string | ObjectId, limit = 10, page = 1) => {
+    const skip = ((page || 1) - 1) * (limit || 10)
+    const uid = new ObjectId(userId)
+
+    const [totalItems, reviews] = await Promise.all([
+      ReviewModel.countDocuments({ likes: uid, isDeleted: false }),
+      ReviewModel.find({ likes: uid, isDeleted: false })
+        .populate('user', 'name avatar')
+        .populate('product', 'name images')
+        .populate('barber', 'name avatar')
+        .populate({
+          path: 'booking',
+          select: 'service',
+          populate: { path: 'service', select: 'name duration price' }
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit || 10)
+        .lean()
+    ])
+
+    return {
+      reviews,
+      pagination: createPagination(page || 1, limit || 10, totalItems)
+    }
   }
 }
 

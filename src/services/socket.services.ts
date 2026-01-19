@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io'
 import { Server as HttpServer } from 'http'
 import { logger } from '~/utils/logger.utils'
 import envConfig from '~/config/env.config'
+import ChatSocket from './chat.socket'
 
 class SocketService {
   private static instance: SocketService
@@ -25,8 +26,14 @@ class SocketService {
       }
     })
 
+    // ...
+
     this.io.on('connection', (socket: Socket) => {
       logger.info(`User connected: ${socket.id}`)
+
+      // Init Chat Socket
+      const chatSocket = new ChatSocket(socket)
+      chatSocket.init()
 
       socket.on('disconnect', () => {
         logger.info(`User disconnected: ${socket.id}`)

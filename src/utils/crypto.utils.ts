@@ -23,7 +23,6 @@ const generateKey = async () => {
   const keyString = 'Travel: verify-email-token'
   const secretKey = crypto.createSecretKey(Buffer.from(keyString, 'utf-8'))
   const hexString = secretKey.export().toString('hex')
-  console.log('Secret Key:', hexString)
   return hexString
 }
 

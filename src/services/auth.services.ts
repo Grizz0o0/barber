@@ -378,7 +378,6 @@ class AuthService {
       },
       secretKey
     })
-    console.log(foundUser)
     try {
       await sendForgotPasswordEmail(payload.email, forgotPasswordToken as string)
     } catch (error) {
