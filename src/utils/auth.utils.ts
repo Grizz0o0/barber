@@ -36,15 +36,3 @@ export const createForgotPasswordToken = async ({ payload, secretKey }: CreateTo
     return null
   }
 }
-
-export const createVerifyEmailToken = async ({ payload, secretKey }: CreateTokenPairParams) => {
-  try {
-    return await sign(payload, secretKey, {
-      algorithm: 'HS256',
-      expiresIn: '1h'
-    })
-  } catch (error) {
-    console.error('Error creating verify email token:', error)
-    return null
-  }
-}

@@ -32,19 +32,19 @@ class AuthController {
     }).send(res)
   }
 
-  static verifyEmail = async (req: Request, res: Response) => {
-    new SuccessResponse({
-      message: 'Verify email success',
-      metadata: await AuthService.verifyEmail(req.body)
-    }).send(res)
-  }
+  // static verifyEmail = async (req: Request, res: Response) => {
+  //   new SuccessResponse({
+  //     message: 'Verify email success',
+  //     metadata: await AuthService.verifyEmail(req.body)
+  //   }).send(res)
+  // }
 
-  static resendVerifyEmail = async (req: Request, res: Response) => {
-    new SuccessResponse({
-      message: 'Resend verify email success',
-      metadata: await AuthService.resendVerifyEmail(req.body)
-    }).send(res)
-  }
+  // static resendVerifyEmail = async (req: Request, res: Response) => {
+  //   new SuccessResponse({
+  //     message: 'Resend verify email success',
+  //     metadata: await AuthService.resendVerifyEmail(req.body)
+  //   }).send(res)
+  // }
 
   static forgotPassword = async (req: Request, res: Response) => {
     new SuccessResponse({

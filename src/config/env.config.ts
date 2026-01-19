@@ -48,11 +48,11 @@ const configSchema = z.object({
   MOMO_LANG: z.string(),
   MOMO_ORDER_INFO: z.string(),
 
-  // AWS Services
-  AWS_ACCESS_KEY_ID: z.string(),
-  AWS_SECRET_ACCESS_KEY: z.string(),
-  AWS_REGION: z.string(),
-  SES_FROM_ADDRESS: z.string(),
+  // AWS Services - Removed
+  // AWS_ACCESS_KEY_ID: z.string(),
+  // AWS_SECRET_ACCESS_KEY: z.string(),
+  // AWS_REGION: z.string(),
+  // SES_FROM_ADDRESS: z.string(),
 
   // OAuth Configuration (Google)
   GOOGLE_CLIENT_ID: z.string(),

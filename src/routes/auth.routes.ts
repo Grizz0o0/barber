@@ -30,12 +30,12 @@ authRouter.post(
   authenticationV2,
   asyncHandler(AuthController.logout)
 )
-authRouter.post('/verify-email', validateRequest(verifyEmailSchema), asyncHandler(AuthController.verifyEmail))
-authRouter.post(
-  '/resend-verify-email',
-  validateRequest(resendVerifyEmailSchema),
-  asyncHandler(AuthController.resendVerifyEmail)
-)
+// authRouter.post('/verify-email', validateRequest(verifyEmailSchema), asyncHandler(AuthController.verifyEmail))
+// authRouter.post(
+//   '/resend-verify-email',
+//   validateRequest(resendVerifyEmailSchema),
+//   asyncHandler(AuthController.resendVerifyEmail)
+// )
 authRouter.post('/forgot-password', validateRequest(forgotPasswordSchema), asyncHandler(AuthController.forgotPassword))
 authRouter.post(
   '/verify-forgot-password',

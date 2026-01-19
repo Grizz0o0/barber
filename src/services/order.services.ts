@@ -9,7 +9,7 @@ import SocketService from '~/services/socket.services'
 import PromotionService from '~/services/promotion.services'
 import { ObjectId } from 'mongodb'
 import { UserRole } from '~/constants/user'
-import { sendOrderSuccessEmail } from '~/utils/email.utils'
+// import { sendOrderSuccessEmail } from '~/utils/email.utils'
 import NotificationService from '~/services/notification.services'
 import { NotificationType } from '~/models/notification.model'
 
@@ -113,7 +113,7 @@ class OrderService {
 
       // 4. Emit Socket & Send Email
       SocketService.getInstance().emit('order:created', newOrder)
-      sendOrderSuccessEmail(user.email, newOrder).catch(console.error)
+      // sendOrderSuccessEmail(user.email, newOrder).catch(console.error)
 
       // 5. Increment Promotion Usage (Async, non-blocking but should be handled)
       if (promotionId) {

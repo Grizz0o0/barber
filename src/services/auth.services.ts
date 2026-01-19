@@ -1,11 +1,6 @@
 import envConfig from '~/config/env.config'
 import bcrypt from 'bcrypt'
-import {
-  createAccessToken,
-  createRefreshToken,
-  createForgotPasswordToken,
-  createVerifyEmailToken
-} from '~/utils/auth.utils'
+import { createAccessToken, createRefreshToken, createForgotPasswordToken } from '~/utils/auth.utils'
 import {
   registerReqBodyType,
   loginReqBodyType,
@@ -37,7 +32,7 @@ import { UserAuthProvider, UserRole, UserVerifyStatus } from '~/constants/user'
 import axios from 'axios'
 import { generateRandomPassword } from '~/utils/crypto.utils'
 import { GoogleTokenBody, GoogleUserInfo } from '~/types/auths.types'
-import { sendForgotPasswordEmail, sendVerifyEmailRegister } from '~/utils/email.utils'
+// import { sendForgotPasswordEmail, sendVerifyEmailRegister } from '~/utils/email.utils'
 import { ObjectId } from 'mongodb'
 
 class AuthService {
@@ -47,9 +42,6 @@ class AuthService {
 
     const isPasswordMatch = await bcrypt.compare(payload.password, foundUser.password)
     if (!isPasswordMatch) throw new BadRequestError('Mật khẩu không chính xác')
-
-    if (foundUser.verify !== UserVerifyStatus.Verified)
-      throw new ForbiddenError('Tài khoản chưa được xác thực. Vui lòng kiểm tra email')
 
     const [accessToken, refreshToken] = await Promise.all([
       createAccessToken({
@@ -104,34 +96,12 @@ class AuthService {
         ...validatedData,
         password: passwordHash,
         role: UserRole.Customer,
-        verify: UserVerifyStatus.Unverified,
+        verify: UserVerifyStatus.Verified,
         authProvider: UserAuthProvider.Local,
         isActive: true
       })
+      const foundUser = newUser
 
-      const verifyEmailToken = await createVerifyEmailToken({
-        payload: { userId: newUser._id.toString(), email: newUser.email, role: newUser.role },
-        secretKey: envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN
-      })
-      if (!verifyEmailToken) throw new BadRequestError('Error creating verify email token')
-
-      const foundUser = await UserModel.findByIdAndUpdate(
-        newUser._id,
-        {
-          $set: { verifyEmailToken }
-        },
-        { new: true }
-      )
-
-      if (!foundUser) throw new NotFoundError('Đăng kí tài khoản thất bại')
-
-      if (!isGoogle) {
-        try {
-          await sendVerifyEmailRegister(foundUser.email, verifyEmailToken)
-        } catch (error) {
-          throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
-        }
-      }
       // Tạo token
       const [accessToken, refreshToken] = await Promise.all([
         createAccessToken({
@@ -326,44 +296,44 @@ class AuthService {
     }
   }
 
-  static resendVerifyEmail = async (payload: resendVerifyEmailReqBodyType) => {
-    const { email } = payload
+  // static resendVerifyEmail = async (payload: resendVerifyEmailReqBodyType) => {
+  //   const { email } = payload
 
-    const foundUser = await UserModel.findOne({ email })
-    if (!foundUser) throw new NotFoundError('Email not registered')
-    if (foundUser.verify === UserVerifyStatus.Verified) {
-      throw new BadRequestError('Email already verified')
-    }
+  //   const foundUser = await UserModel.findOne({ email })
+  //   if (!foundUser) throw new NotFoundError('Email not registered')
+  //   if (foundUser.verify === UserVerifyStatus.Verified) {
+  //     throw new BadRequestError('Email already verified')
+  //   }
 
-    // Tạo token verify email
-    const secretKey = envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN
-    const verifyEmailToken = (await createVerifyEmailToken({
-      payload: {
-        userId: foundUser._id.toString(),
-        email: foundUser.email,
-        role: foundUser.role,
-        type: 'verify-email'
-      },
-      secretKey
-    })) as string
+  //   // Tạo token verify email
+  //   const secretKey = envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN
+  //   const verifyEmailToken = (await createVerifyEmailToken({
+  //     payload: {
+  //       userId: foundUser._id.toString(),
+  //       email: foundUser.email,
+  //       role: foundUser.role,
+  //       type: 'verify-email'
+  //     },
+  //     secretKey
+  //   })) as string
 
-    await UserModel.updateOne(
-      { _id: foundUser._id },
-      {
-        $set: { verifyEmailToken },
-        $currentDate: { updatedAt: true }
-      }
-    )
+  //   await UserModel.updateOne(
+  //     { _id: foundUser._id },
+  //     {
+  //       $set: { verifyEmailToken },
+  //       $currentDate: { updatedAt: true }
+  //     }
+  //   )
 
-    try {
-      await sendVerifyEmailRegister(foundUser.email, verifyEmailToken as string)
-    } catch (error) {
-      console.error(error)
-      throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
-    }
+  //   try {
+  //     await sendVerifyEmailRegister(foundUser.email, verifyEmailToken as string)
+  //   } catch (error) {
+  //     console.error(error)
+  //     throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
+  //   }
 
-    return { email: foundUser.email, verifyEmailToken }
-  }
+  //   return { email: foundUser.email, verifyEmailToken }
+  // }
 
   static forgotPassword = async (payload: forgotPasswordReqBodyType) => {
     const foundUser = await UserModel.findOne({ email: payload.email })
@@ -378,11 +348,11 @@ class AuthService {
       },
       secretKey
     })
-    try {
-      await sendForgotPasswordEmail(payload.email, forgotPasswordToken as string)
-    } catch (error) {
-      throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
-    }
+    // try {
+    //   await sendForgotPasswordEmail(payload.email, forgotPasswordToken as string)
+    // } catch (error) {
+    //   throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
+    // }
     await UserModel.updateOne(
       { _id: foundUser._id },
       {
@@ -395,25 +365,25 @@ class AuthService {
     return { email: foundUser.email, forgotPasswordToken }
   }
 
-  static verifyEmail = async (payload: verifyEmailReqBodyType) => {
-    const decode = await verifyToken(payload.verifyEmailToken, envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN)
-    if (!decode) throw new BadRequestError('verify_token decode fail')
+  // static verifyEmail = async (payload: verifyEmailReqBodyType) => {
+  //   const decode = await verifyToken(payload.verifyEmailToken, envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN)
+  //   if (!decode) throw new BadRequestError('verify_token decode fail')
 
-    const user = await UserModel.findById(decode.userId)
-    if (!user) throw new BadRequestError('User not found')
+  //   const user = await UserModel.findById(decode.userId)
+  //   if (!user) throw new BadRequestError('User not found')
 
-    if (user.verify === UserVerifyStatus.Verified) return decode
+  //   if (user.verify === UserVerifyStatus.Verified) return decode
 
-    const result = await UserModel.findByIdAndUpdate(decode.userId, {
-      $set: { verify: UserVerifyStatus.Verified },
-      $unset: { verifyEmailToken: '' },
-      $currentDate: {
-        updatedAt: true
-      }
-    })
-    if (!result) throw new BadRequestError('Verify Email failed')
-    return decode
-  }
+  //   const result = await UserModel.findByIdAndUpdate(decode.userId, {
+  //     $set: { verify: UserVerifyStatus.Verified },
+  //     $unset: { verifyEmailToken: '' },
+  //     $currentDate: {
+  //       updatedAt: true
+  //     }
+  //   })
+  //   if (!result) throw new BadRequestError('Verify Email failed')
+  //   return decode
+  // }
 
   static resendVerifyForgotPasswordEmail = async (payload: resendForgotPasswordReqBodyType) => {
     const { email } = payload
@@ -432,12 +402,12 @@ class AuthService {
       secretKey
     })
 
-    try {
-      await sendForgotPasswordEmail(foundUser.email, forgotPasswordToken as string)
-    } catch (error) {
-      console.error(error)
-      throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
-    }
+    // try {
+    //   await sendForgotPasswordEmail(foundUser.email, forgotPasswordToken as string)
+    // } catch (error) {
+    //   console.error(error)
+    //   throw new BadRequestError('Gửi email thất bại, vui lòng thử lại.')
+    // }
 
     await UserModel.updateOne(
       { _id: foundUser._id },

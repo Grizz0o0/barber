@@ -8,7 +8,7 @@ import SocketService from '~/services/socket.services'
 import { ObjectId } from 'mongodb'
 import UserModel from '~/models/user.model'
 import { UserRole } from '~/constants/user'
-import { sendBookingSuccessEmail } from '~/utils/email.utils'
+// import { sendBookingSuccessEmail } from '~/utils/email.utils'
 import PromotionService from '~/services/promotion.services'
 import NotificationService from '~/services/notification.services'
 import { NotificationType } from '~/models/notification.model'
@@ -190,9 +190,9 @@ class BookingService {
 
     // Send Email (Async, don't block)
     // Send Email (Async, don't block) - Only if registered user
-    if (customerUser) {
-      sendBookingSuccessEmail(customerUser.email, newBooking).catch(console.error)
-    }
+    // if (customerUser) {
+    //   sendBookingSuccessEmail(customerUser.email, newBooking).catch(console.error)
+    // }
 
     return newBooking
   }
