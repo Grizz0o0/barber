@@ -3,7 +3,7 @@ import SystemConfigsService from '~/services/systemConfigs.services'
 import { OK } from '~/responses/success.response'
 
 class SystemConfigsController {
-  getConfig = async (req: Request, res: Response, next: NextFunction) => {
+  getConfig = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const config = await SystemConfigsService.getConfig()
       new OK({

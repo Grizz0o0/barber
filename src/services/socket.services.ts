@@ -20,7 +20,13 @@ class SocketService {
   public init(httpServer: HttpServer): void {
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: envConfig.CLIENT_URL, // Match with Express cors config
+        origin: [
+          envConfig.CLIENT_URL,
+          'http://localhost:3000',
+          'http://127.0.0.1:3000',
+          'http://localhost:5173',
+          'http://127.0.0.1:5173'
+        ], // Match with Express cors config
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         credentials: true
       }
