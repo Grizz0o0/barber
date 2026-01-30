@@ -153,6 +153,30 @@ class OrderService {
 
     const totalItems = await OrderModel.countDocuments(filter)
 
+    // Calculate total spent (lifetime, paid or delivered)
+    const aggregationMatch: any = {
+      $or: [{ paymentStatus: 'paid' }, { status: 'delivered' }],
+      isDeleted: false
+    }
+
+    if (filter.user) {
+      aggregationMatch.user = new ObjectId(filter.user.toString())
+    }
+
+    const totalSpentAggregation = await OrderModel.aggregate([
+      {
+        $match: aggregationMatch
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalPrice' }
+        }
+      }
+    ])
+
+    const totalSpent = totalSpentAggregation.length > 0 ? totalSpentAggregation[0].total : 0
+
     const orders = await OrderModel.find(filter)
       .populate('items.product', 'name image')
       .populate('user', 'name email phone avatar')
@@ -163,7 +187,7 @@ class OrderService {
 
     const pagination = createPagination(page || 1, limit || 10, totalItems)
 
-    return { orders, pagination }
+    return { orders, pagination, totalSpent }
   }
 
   static getOrderById = async (orderId: string, userId: string, role: string) => {

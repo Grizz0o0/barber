@@ -457,7 +457,13 @@ class BookingService {
   }
 
   static validateBarberSchedule = async (barberId: ObjectId, startDateTime: Date, endDateTime: Date) => {
-    const dayOfWeek = startDateTime.getDay()
+    // 1. Convert Booking Time to Vietnam Time to get the correct Day of Week
+    // using "en-US" ensures Sunday is 0, Monday is 1, matching getDay()
+    const vnTimeZone = 'Asia/Ho_Chi_Minh'
+    const vnDateString = startDateTime.toLocaleString('en-US', { timeZone: vnTimeZone })
+    const vnDate = new Date(vnDateString)
+    const dayOfWeek = vnDate.getDay() // 0-6 in VN time
+
     const barberSchedule = await BarberScheduleModel.findOne({
       barber: barberId,
       dayOfWeek,
@@ -472,22 +478,20 @@ class BookingService {
       throw new BadRequestError('Barber is off on this day')
     }
 
-    // Standardize to UTC: We assume BarberSchedule start/end times are stored in UTC (HH:MM)
-    // and the incoming startDateTime is a proper ISO 8601 Date object.
-    const [startHour, startMinute] = barberSchedule.startTime.split(':').map(Number)
-    const [endHour, endMinute] = barberSchedule.endTime.split(':').map(Number)
+    // 2. Validate Time Range
+    // BarberSchedule stores simple strings "HH:mm" (e.g. "09:00") assuming Local Time (VN).
+    // We need to convert the Booking's specific UTC instants to Local "HH:mm" strings to compare.
 
-    const scheduleStart = new Date(startDateTime)
-    scheduleStart.setUTCHours(startHour, startMinute, 0, 0)
+    // Format: "HH:mm" (24-hour format)
+    // en-GB uses HH:mm:ss by default, we slice the first 5 chars
+    const bookingStartStr = startDateTime
+      .toLocaleTimeString('en-GB', { timeZone: vnTimeZone, hour12: false })
+      .slice(0, 5)
+    const bookingEndStr = endDateTime.toLocaleTimeString('en-GB', { timeZone: vnTimeZone, hour12: false }).slice(0, 5)
 
-    const scheduleEnd = new Date(startDateTime)
-    scheduleEnd.setUTCHours(endHour, endMinute, 0, 0)
-
-    // Note: If scheduleEnd is meant to be the next day (e.g. 23:00 to 02:00), logic needs generic day-crossing handling.
-    // Assuming strictly within-day schedules for Barber for now or stored as UTC covering the shift.
-
-    if (startDateTime < scheduleStart || endDateTime > scheduleEnd) {
-      throw new BadRequestError('Booking time is outside of barber working hours (UTC)')
+    // String comparison works for "HH:mm" format (e.g. "09:00" <= "09:30")
+    if (bookingStartStr < barberSchedule.startTime || bookingEndStr > barberSchedule.endTime) {
+      throw new BadRequestError('Booking time is outside of barber working hours')
     }
   }
   static handleEmergency = async ({
