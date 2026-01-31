@@ -8,7 +8,8 @@ import {
   createPromotionSchema,
   deletePromotionSchema,
   getPromotionSchema,
-  updatePromotionSchema
+  updatePromotionSchema,
+  verifyPromotionSchema
 } from '~/requestSchemas/promotion.request'
 
 const promotionRouter = Router()
@@ -21,6 +22,13 @@ promotionRouter.post(
   authorizeRoles(UserRole.Admin),
   validateRequest(createPromotionSchema),
   asyncHandler(PromotionController.createPromotion)
+)
+
+// Verify Promotion
+promotionRouter.post(
+  '/verify',
+  validateRequest(verifyPromotionSchema),
+  asyncHandler(PromotionController.verifyPromotion)
 )
 
 // List (Authenticated users)

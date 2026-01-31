@@ -71,3 +71,13 @@ export const getPromotionSchema = {
 }
 
 export type GetPromotionQuery = z.infer<typeof getPromotionSchema.query>
+
+export const verifyPromotionSchema = {
+  body: z.object({
+    code: z.string({ error: 'Mã khuyến mãi là bắt buộc' }).trim().min(1),
+    amount: z.number().min(0),
+    context: z.enum(['product', 'service', 'all']).default('all')
+  })
+}
+
+export type VerifyPromotionReqBody = z.infer<typeof verifyPromotionSchema.body>

@@ -40,6 +40,15 @@ class PromotionController {
       metadata: await PromotionService.deletePromotion(userId, req.params.id)
     }).send(res)
   }
+
+  static verifyPromotion = async (req: Request, res: Response) => {
+    const { code, amount, context } = req.body
+    const result = await PromotionService.verifyPromotion(code, amount, context)
+    new SuccessResponse({
+      message: result.message || (result.isValid ? 'Mã khuyến mãi hợp lệ' : 'Mã khuyến mãi không hợp lệ'),
+      metadata: result
+    }).send(res)
+  }
 }
 
 export default PromotionController
